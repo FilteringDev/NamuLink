@@ -79,7 +79,7 @@ Win.setTimeout = new Proxy(Win.setTimeout, {
     let StringifiedFunc = Args[0].toString()
     if (PowerLinkGenerationSkeletionPositiveRegExps.filter(PowerLinkGenerationSkeletionPositiveRegExp => PowerLinkGenerationSkeletionPositiveRegExp.filter(Index => Index.test(StringifiedFunc)).length >= 1).length === 1) {
       console.debug('[NamuLink] setTimeout:', Args[0])
-      return Reflect.apply(Target, ThisArg, [() => {}, Args[1]])
+      return
     }
 
     return Reflect.apply(Target, ThisArg, Args)
