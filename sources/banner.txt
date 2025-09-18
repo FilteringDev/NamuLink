@@ -4,11 +4,11 @@
 // @namespace    https://github.com/List-KR/NamuLink
 // @homepageURL  https://github.com/List-KR/NamuLink
 // @supportURL   https://github.com/List-KR/NamuLink/issues
-// @updateURL    https://cdn.jsdelivr.net/npm/@list-kr/namulink@latest/dist/NamuLink.user.js
-// @downloadURL  https://cdn.jsdelivr.net/npm/@list-kr/namulink@latest/dist/NamuLink.user.js
+// @updateURL    https://cdn.jsdelivr.net/npm/@filteringdev/namulink@latest/dist/NamuLink.user.js
+// @downloadURL  https://cdn.jsdelivr.net/npm/@filteringdev/namulink@latest/dist/NamuLink.user.js
 // @license      MIT
 //
-// @version      17.4.1
+// @version      17.4.2
 // @author       PiQuark6046 and contributors
 //
 // @match        https://namu.wiki/*
