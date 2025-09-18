@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         NamuLink
 // @encoding     utf-8
-// @namespace    https://github.com/List-KR/NamuLink
-// @homepageURL  https://github.com/List-KR/NamuLink
-// @supportURL   https://github.com/List-KR/NamuLink/issues
+// @namespace    https://github.com/FilteringDev/NamuLink
+// @homepageURL  https://github.com/FilteringDev/NamuLink
+// @supportURL   https://github.com/FilteringDev/NamuLink/issues
 // @updateURL    https://cdn.jsdelivr.net/npm/@filteringdev/namulink@latest/dist/NamuLink.user.js
 // @downloadURL  https://cdn.jsdelivr.net/npm/@filteringdev/namulink@latest/dist/NamuLink.user.js
 // @license      MIT
 //
-// @version      17.4.2
+// @version      17.4.3
 // @author       PiQuark6046 and contributors
 //
 // @match        https://namu.wiki/*
