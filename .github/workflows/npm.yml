@@ -40,6 +40,6 @@ jobs:
       - name: Purge jsdelivr cache
         uses: FilteringDev/jsdelivr-purge-npm@1.0.7
         with:
-          package: '@list-kr/namulink'
+          package: '@filteringdev/namulink'
           disttag: 'latest'
     needs: [publish]
