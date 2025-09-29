@@ -1,0 +1,1 @@
+export { RunNamuLinkUserscript } from './src/index.js'
