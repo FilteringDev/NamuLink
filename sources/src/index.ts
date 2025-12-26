@@ -98,6 +98,29 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
       return Reflect.apply(Target, ThisArg, Args)
     }
   })
+
+  let PowerLinkGenerationSurfingPositiveRegExps: RegExp[][] = [[
+    /function\( *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+\) *\{ *var *_0x[a-f0-9]+ *= *_0x[a-f0-9]+ *; *const *_0x[a-f0-9]+ *= *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *= *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *= *_0x[a-f0-9]+/,
+    /\[ *('|")[a-zA-Z0-9-_]+('|") *\] *\) *\( *\( *\) *=> *\[*\( *\( *0x[a-f0-9]+ *\* *0x[a-f0-9]+ *\+ *-? *0x[a-f0-9]+ *\+ *-? *0x[a-f0-9]+/,
+    / *, *{ *('|")[a-zA-Z0-9-_]+('|") *: *0x[a-f0-9]+ *, *('|")[a-zA-Z0-9-_]+('|") *: *\( *0x[a-f0-9]+ *\* *0x[a-f0-9]+ *\+ *0x[a-f0-9]+ *\+ *-? *0x[a-f0-9]+/,
+    /('|")innerHTML('|") *: *_0x[a-f0-9]+ *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\} *, *null *, *-? *0x[a-f0-9]+ *\* *0x[a-f0-9]+/,
+    /\( *_0x[a-f0-9]+ *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\) *&& *-?0x[a-f0-9]+ *\+ *0x[a-f0-9]+ *\+ *-? *0x[a-f0-9]+ *\* *-? *0x[a-f0-9]+ *!== *_0x[a-f0-9]+/,
+    /{ *('|")[A-Za-z0-9-_]+('|") *: *\( *0x[a-f0-9]+ *\* *-? *0x[a-f0-9]+ *\+ *0x[a-f0-9]+ *\* *-? *0x[a-f0-9]+ *\+ *0x[a-f0-9]+ *\* *0x[a-f0-9]+ *, *_0x[a-f0-9]+ *\[ *('|")[A-Za-z0-9-_]+('|") *\] *\) *\( *\( *\) *=> *\[/,
+    /\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *, *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\) *\] *, *-? *0x[a-f0-9]+ *\+ *0x[a-f0-9]+ *\* *-?0x[a-f0-9]+ *\+ *0x[a-f0-9]+ *\* *0x[a-f0-9]+ *\) *; *\}/
+  ]]
+
+  BrowserWindow.Function.prototype.call = new Proxy(BrowserWindow.Function.prototype.call, {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    apply(Target: typeof Function.prototype.call, ThisArg: Function, Args: Parameters<typeof Function.prototype.call>) {
+      let StringifiedFunc = Reflect.apply(ProtectedFunctionPrototypeToString, ThisArg, Args) as string
+      if ( StringifiedFunc.length <= 25000
+        && PowerLinkGenerationSurfingPositiveRegExps.filter(PowerLinkGenerationSurfingPositiveRegExp => PowerLinkGenerationSurfingPositiveRegExp.filter(Index => Index.test(StringifiedFunc)).length >= 5).length === 1) {
+        console.debug(`[${UserscriptName}]: Function.prototype.call:`, ThisArg)
+        return Reflect.apply(Target, () => {}, [])
+      }
+      return Reflect.apply(Target, ThisArg, Args)
+    }
+  })
 }
 
 RunNamuLinkUserscript(Win)
