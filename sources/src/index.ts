@@ -15,6 +15,8 @@ declare const unsafeWindow: unsafeWindow
 const Win = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window
 
 export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptName: string = 'NamuLink'): void {
+  const ProtectedFunctionPrototypeToString = BrowserWindow.Function.prototype.toString
+
   function GetParents(Ele: HTMLElement) {
     let Parents: HTMLElement[] = []
     while (Ele.parentElement) {
@@ -68,7 +70,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
   BrowserWindow.Function.prototype.bind = new Proxy(BrowserWindow.Function.prototype.bind, {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     apply(Target: typeof Function.prototype.bind, ThisArg: Function, Args: Parameters<typeof Function.prototype.bind>) {
-      let StringifiedFunc = ThisArg.toString()
+      let StringifiedFunc = Reflect.apply(ProtectedFunctionPrototypeToString, ThisArg, Args) as string
       if (PowerLinkGenerationPositiveRegExps.filter(PowerLinkGenerationPositiveRegExp => PowerLinkGenerationPositiveRegExp.filter(Index => Index.test(StringifiedFunc)).length >= 3).length === 1) {
         console.debug(`[${UserscriptName}]: Function.prototype.bind:`, ThisArg)
         return Reflect.apply(Target, () => {}, [])
@@ -87,7 +89,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
 
   BrowserWindow.setTimeout = new Proxy(BrowserWindow.setTimeout, {
     apply(Target: typeof setTimeout, ThisArg: undefined, Args: Parameters<typeof setTimeout>) {
-      let StringifiedFunc = Args[0].toString()
+      let StringifiedFunc = Reflect.apply(ProtectedFunctionPrototypeToString, Args[0], Args) as string
       if (PowerLinkGenerationSkeletionPositiveRegExps.filter(PowerLinkGenerationSkeletionPositiveRegExp => PowerLinkGenerationSkeletionPositiveRegExp.filter(Index => Index.test(StringifiedFunc)).length >= 1).length === 1) {
         console.debug(`[${UserscriptName}]: setTimeout:`, Args[0])
         return
