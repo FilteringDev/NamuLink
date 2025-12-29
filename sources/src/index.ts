@@ -88,7 +88,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     })
   }
 
-  window.addEventListener('SpaRendered', async () => {
+  const Handler = async () => {
     let HTMLEle = Sort.CollectDataVAttributes(document)
     const { Result, TotalKeys, WorkerCount, HardwareConcurrency } = await Sort.RankCountsWithWorkersParallel(HTMLEle)
     let TargetedAttrsDOMs: HTMLElement[] = []
@@ -105,11 +105,14 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     TargetedAttrsDOMs = TargetedAttrsDOMs.filter(El => [...El.querySelectorAll('*')].some(Child => Child instanceof HTMLElement && getComputedStyle(Child, '::after').getPropertyValue('content').includes(':') && Child.getBoundingClientRect().right - Child.getBoundingClientRect().left > 100) === false)
     console.debug(`[${UserscriptName}]`, TargetedAttrsDOMs)
     TargetedAttrsDOMs.forEach(El => {
-      setTimeout(() => {
+      setInterval(() => {
         El.setAttribute('style', 'display: none !important; visibility: hidden !important;')
       }, 250)
     })
-  })
+  }
+
+  window.addEventListener('SpaRendered', () => setTimeout(Handler, 2500))
+  window.addEventListener('SpaRendered', Handler)
 }
 
 RunNamuLinkUserscript(Win)
