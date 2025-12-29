@@ -19,6 +19,48 @@ const Win = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window
 export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptName: string = 'NamuLink'): void {
   const ProtectedFunctionPrototypeToString = BrowserWindow.Function.prototype.toString
 
+  let PowerLinkGenerationPositiveRegExps: RegExp[][] = [[
+    /for *\( *; *; *\) *switch *\( *_[a-z0-9]+\[_[a-z0-9]+\([a-z0-9]+\)\] *=_[a-z0-9]+/,
+    /_[a-z0-9]+\[('|")[A-Z]+('|")\]\)\(\[ *\]\)/,
+    /0x[a-z0-9]+ *\) *; *case/
+  ], [
+    /; *return *this\[_0x[a-z0-9]+\( *0x[0-9a-z]+ *\)/,
+    /; *if *\( *_0x[a-z0-9]+ *&& *\( *_0x[a-z0-9]+ *= *_0x[a-z0-9]+/,
+    /\) *, *void *\( *this *\[ *_0x[a-z0-9]+\( *0x[0-9a-z]+ *\) *\] *= *_0x[a-z0-9]+ *\[/
+  ]]
+
+  BrowserWindow.Function.prototype.bind = new Proxy(BrowserWindow.Function.prototype.bind, {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+      apply(Target: typeof Function.prototype.bind, ThisArg: Function, Args: Parameters<typeof Function.prototype.bind>) {
+        let StringifiedFunc = Reflect.apply(ProtectedFunctionPrototypeToString, ThisArg, Args) as string
+        if (PowerLinkGenerationPositiveRegExps.filter(PowerLinkGenerationPositiveRegExp => PowerLinkGenerationPositiveRegExp.filter(Index => Index.test(StringifiedFunc)).length >= 3).length === 1) {
+          console.debug(`[${UserscriptName}]: Function.prototype.bind:`, ThisArg)
+          return Reflect.apply(Target, () => {}, [])
+        }
+        return Reflect.apply(Target, ThisArg, Args)
+      }
+    })
+
+  let PowerLinkGenerationSkeletionPositiveRegExps: RegExp[][] = [[
+    /\( *\) *=> *{ *var *_0x[0-9a-z]+ *= *a0_0x[0-9a-f]+ *; *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\]\(\); *}/,
+    /\( *\) *=> *{ *var *_0x[0-9a-z]+ *= *a0_0x[0-9a-f]+ *; *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\]\(\); *}/
+  ], [
+    /\( *\) *=> *{ *var _0x[a-z0-9]+ *= *_0x[a-z0-9]+ *; *if *\( *this\[ *_0x[a-z0-9]+ *\( *0x[0-9a-f]+ *\) *\] *\) *return *clearTimeout/,
+    /\( *0x[0-9a-f]+ *\) *\] *\) *, *void *\( *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\] *= *void *\([x0-9a-f*+-]+ *\) *\) *; *this\[_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\] *\(\) *;/
+  ]]
+
+  BrowserWindow.setTimeout = new Proxy(BrowserWindow.setTimeout, {
+    apply(Target: typeof setTimeout, ThisArg: undefined, Args: Parameters<typeof setTimeout>) {
+      let StringifiedFunc = Reflect.apply(ProtectedFunctionPrototypeToString, Args[0], Args) as string
+      if (PowerLinkGenerationSkeletionPositiveRegExps.filter(PowerLinkGenerationSkeletionPositiveRegExp => PowerLinkGenerationSkeletionPositiveRegExp.filter(Index => Index.test(StringifiedFunc)).length >= 1).length === 1) {
+        console.debug(`[${UserscriptName}]: setTimeout:`, Args[0])
+        return
+      }
+
+      return Reflect.apply(Target, ThisArg, Args)
+    }
+  })
+
   if (document.readyState === 'loading') {
     window.addEventListener('DOMContentLoaded', () => {
       SPA.InstallSpaNavigationBridge({
