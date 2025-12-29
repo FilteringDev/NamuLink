@@ -19,7 +19,8 @@ const Win = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window
 export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptName: string = 'NamuLink'): void {
   const ProtectedFunctionPrototypeToString = BrowserWindow.Function.prototype.toString
 
-  window.addEventListener('DOMContentLoaded', () => {
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', () => {
       SPA.InstallSpaNavigationBridge({
       Root: () => document.getElementById('#app'),
       StableForMs: 900,
@@ -30,6 +31,20 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
       WatchHashChange: true
     })
   })
+  } else {
+    // 이미 DOMContentLoaded 이후
+    window.addEventListener('DOMContentLoaded', () => {
+      SPA.InstallSpaNavigationBridge({
+      Root: () => document.getElementById('#app'),
+      StableForMs: 900,
+      SampleWindowMs: 900,
+      Threshold: 3,
+      TimeoutMs: 12000,
+      IgnoreMutation: SPA.DefaultIgnoreMutation,
+      WatchHashChange: true
+      })
+    })
+  }
 
   window.addEventListener('SpaRendered', async () => {
     let HTMLEle = Sort.CollectDataVAttributes(document)
