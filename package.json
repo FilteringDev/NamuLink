@@ -8,7 +8,7 @@
     "build:userscript": "esbuild sources/src/index.ts --bundle --minify --define:global=window --inject:./sources/esbuild.inject.ts --banner:js=\"$(cat ./sources/banner.txt)\" --target=es2024,chrome119,safari17,firefox121 --outfile=./dist/NamuLink.user.js",
     "build": "npm run build:interface && npm run build:userscript",
     "debug": "esbuild sources/src/index.ts --bundle --define:global=window --inject:./sources/esbuild.inject.ts --banner:js=\"$(cat ./sources/banner.txt)\" --target=es2024,chrome119,safari17,firefox121 --outfile=./dist/NamuLink-debug.user.js",
-    "lint": "tsc && eslint sources --ext .ts"
+    "lint": "tsc --noEmit && eslint sources --ext .ts"
   },
   "keywords": [],
   "author": {
