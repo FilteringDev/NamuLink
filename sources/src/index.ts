@@ -102,7 +102,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
       let Count = [...El.querySelectorAll('*')].filter(Child => (Child.getBoundingClientRect().bottom - Child.getBoundingClientRect().top > 25 && Child.getBoundingClientRect().right - Child.getBoundingClientRect().left > 25 && (Child instanceof SVGPathElement && Child.getAttribute('d') !== null) || (Child instanceof HTMLImageElement && Child.src.includes('//i.namu.wiki/i/')))).length
       return 1 <= Count && Count <= 6
     })
-    TargetedAttrsDOMs = TargetedAttrsDOMs.filter(El => [...El.querySelectorAll('*')].some(Child => Child instanceof HTMLElement && getComputedStyle(Child, '::after').getPropertyValue('content').includes(':') && Child.getBoundingClientRect().right - Child.getBoundingClientRect().left > 100) === false)
+    TargetedAttrsDOMs = TargetedAttrsDOMs.filter(El => [...El.querySelectorAll('*')].some(Child => Child instanceof HTMLElement && getComputedStyle(Child, '::after').getPropertyValue('content').includes(':') && Child.getBoundingClientRect().right - Child.getBoundingClientRect().left > 20) === false)
     console.debug(`[${UserscriptName}]`, TargetedAttrsDOMs)
     TargetedAttrsDOMs.forEach(El => {
       setInterval(() => {
