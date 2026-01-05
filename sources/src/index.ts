@@ -103,6 +103,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
       return 1 <= Count && Count <= 6
     })
     TargetedAttrsDOMs = TargetedAttrsDOMs.filter(El => [...El.querySelectorAll('*')].some(Child => Child instanceof HTMLElement && getComputedStyle(Child, '::after').getPropertyValue('content').includes(':') && Child.getBoundingClientRect().right - Child.getBoundingClientRect().left > 20) === false)
+    TargetedAttrsDOMs = TargetedAttrsDOMs.filter(El => [...El.querySelectorAll('*')].every(Child => Child instanceof HTMLElement && !new Date(Child.getHTML()).getTime()))
     console.debug(`[${UserscriptName}]`, TargetedAttrsDOMs)
     TargetedAttrsDOMs.forEach(El => {
       setInterval(() => {
