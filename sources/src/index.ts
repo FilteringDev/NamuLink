@@ -49,12 +49,50 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     /\( *0x[0-9a-f]+ *\) *\] *\) *, *void *\( *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\] *= *void *\([x0-9a-f*+-]+ *\) *\) *; *this\[_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\] *\(\) *;/
   ]]
 
+  function GetParents(Ele: HTMLElement) {
+    let Parents: HTMLElement[] = []
+    while (Ele.parentElement) {
+      Parents.push(Ele.parentElement)
+      Ele = Ele.parentElement
+    }
+    return Parents
+  }
+
+  const HidePowerLinkPlaceholderWithAccount = () => {
+     let AdContainers = [...document.querySelectorAll('div[class*=" "] div[class]')].filter(AdContainer => AdContainer instanceof HTMLElement)
+
+      AdContainers = AdContainers.filter((AdContainer) => {
+        let AdContainerPaddingLeft = Number(getComputedStyle(AdContainer).getPropertyValue('padding-left').replaceAll('px', ''))
+        let AdContainerPaddingRight = Number(getComputedStyle(AdContainer).getPropertyValue('padding-right').replaceAll('px', ''))
+        let AdContainerPaddingTop = Number(getComputedStyle(AdContainer).getPropertyValue('padding-top').replaceAll('px', ''))
+        let AdContainerPaddingBottom = Number(getComputedStyle(AdContainer).getPropertyValue('padding-bottom').replaceAll('px', ''))
+        return AdContainerPaddingLeft > 5 && AdContainerPaddingRight > 5 && AdContainerPaddingTop > 5 && AdContainerPaddingBottom > 5
+      })
+
+      AdContainers = AdContainers.filter(AdContainer => {
+        return [...AdContainer.querySelectorAll('*')].filter(Ele => Ele instanceof HTMLElement &&
+          getComputedStyle(Ele).getPropertyValue('animation-timing-function') === 'ease-in-out').length >= 3
+      })
+
+      AdContainers = AdContainers.filter(AdContainer => GetParents(AdContainer).some(Parent => Number(getComputedStyle(Parent).getPropertyValue('margin-top').replaceAll('px', '')) > 10 ))
+
+      AdContainers = AdContainers.filter(AdContainer => AdContainer.innerText.length < 1000)
+
+      AdContainers = AdContainers.filter(AdContainer => [...AdContainer.querySelectorAll('*[href="/RecentChanges"]')].filter(Ele => Ele instanceof HTMLElement && getComputedStyle(Ele).getPropertyValue('display') !== 'none').length === 0)
+
+      AdContainers = AdContainers.filter(AdContainer => !AdContainer.innerText.includes((new URL(location.href).searchParams.get('from') || '') + '에서 넘어옴'))
+
+      AdContainers = AdContainers.filter(AdContainer => !/\[[0-9]+\] .+/.test(AdContainer.innerText))
+
+      AdContainers.forEach(Ele => Ele.setAttribute('style', 'display: none !important; visibility: hidden !important;'))
+  }
+
   BrowserWindow.setTimeout = new Proxy(BrowserWindow.setTimeout, {
     apply(Target: typeof setTimeout, ThisArg: undefined, Args: Parameters<typeof setTimeout>) {
       let StringifiedFunc = Reflect.apply(ProtectedFunctionPrototypeToString, Args[0], Args) as string
       if (PowerLinkGenerationSkeletionPositiveRegExps.filter(PowerLinkGenerationSkeletionPositiveRegExp => PowerLinkGenerationSkeletionPositiveRegExp.filter(Index => Index.test(StringifiedFunc)).length >= 1).length === 1) {
         console.debug(`[${UserscriptName}]: setTimeout:`, Args[0])
-        return
+        return Reflect.apply(Target, ThisArg, [HidePowerLinkPlaceholderWithAccount, 1500])
       }
 
       return Reflect.apply(Target, ThisArg, Args)
