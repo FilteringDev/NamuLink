@@ -1,57 +1,41 @@
 {
   "name": "@filteringdev/namulink",
-  "version": "18.2.0",
+  "version": "0.0.0",
   "description": "",
   "type": "module",
   "scripts": {
-    "build:interface": "esbuild sources/interface.ts --bundle --format=esm --splitting --sourcemap --target=es2024 --external:/node_modules --outdir=dist && tsc --outDir dist/types --declaration --emitDeclarationOnly",
-    "build:userscript": "esbuild sources/src/index.ts --bundle --minify --define:global=window --inject:./sources/esbuild.inject.ts --banner:js=\"$(cat ./sources/banner.txt)\" --target=es2024,chrome119,safari17,firefox121 --outfile=./dist/NamuLink.user.js",
+    "build:interface": "tsc -p userscript/tsconfig.json",
+    "build:userscript": "npm run build -w builder -- --minify true --use-cache false --build-type production --SubscriptionUrl https://cdn.jsdelivr.net/npm/@filteringdev/namulink@latest/dist/NamuLink.user.js",
     "build": "npm run build:interface && npm run build:userscript",
-    "debug": "esbuild sources/src/index.ts --bundle --define:global=window --inject:./sources/esbuild.inject.ts --banner:js=\"$(cat ./sources/banner.txt)\" --target=es2024,chrome119,safari17,firefox121 --outfile=./dist/NamuLink-debug.user.js",
-    "lint": "tsc --noEmit && eslint sources --ext .ts"
+    "debug": "npm run debug -w builder",
+    "lint": "npm run lint -w builder && npm run lint -w userscript"
   },
-  "keywords": [],
-  "author": {
-    "name": "PiQuark6046",
-    "email": "piquark6046@proton.me",
-    "url": "https://github.com/PiQuark6046"
-  },
+  "keywords": [
+    "namu.wiki",
+    "NamuWiki"
+  ],
   "files": [
     "dist/**/*"
   ],
   "exports": {
     ".": {
-      "import": "./dist/interface.js",
-      "types": "./dist/types/interface.d.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
-  "types": "./dist/types/interface.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/FilteringDev/NamuLink.git"
   },
-  "contributors": [
-    {
-      "name": "green1052",
-      "url": "https://github.com/green1052"
-    },
-    {
-      "name": "gaeulbyul",
-      "url": "https://github.com/gaeulbyul"
-    },
-    {
-      "name": "Adguard Software Ltd.",
-      "url": "https://adguard.com/"
-    }
+  "license": "MPL-2.0",
+  "workspaces": [
+    "userscript",
+    "builder"
   ],
-  "license": "MIT",
-  "dependencies": {
-    "@types/node": "^24.10.4"
-  },
   "devDependencies": {
-    "esbuild": "^0.27.2",
-    "eslint": "^9.39.2",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.50.1"
+    "@typescript-eslint/eslint-plugin": "^8.57.0",
+    "@typescript-eslint/parser": "^8.57.0",
+    "eslint": "^10.0.3",
+    "typescript-eslint": "^8.57.0"
   }
 }

@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
  * Contributors:
- *   - See Git history at https://github.com/FilteringDev/tinyShield for detailed authorship information.
+ *   - See Git history at https://github.com/FilteringDev/NamuLink for detailed authorship information.
  */
 
 type SpaNavigateCause =
