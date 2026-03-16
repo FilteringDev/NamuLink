@@ -39,9 +39,8 @@ export async function Build(OptionsParam?: BuildOptions): Promise<void> {
     License: 'MPL-2.0',
     Author: 'PiQuark6046 and contributors',
     Description: {
-      en: 'NamuLink allows AdGuard, uBlock Origin, Brave and ABP to resist against Ad-Shield quickly.',
-      ko: 'NamuLink는 AdGuard, uBlock Origin, Brave 와 ABP가 애드쉴드에 빠르게 저항할 수 있도록 합니다.',
-      ja: 'NamuLinkを使うと、AdGuard, uBlock Origin, Brave, およびABPがAd-Shieldに素早く対抗できます。'
+      en: 'NamuLink blocks the PowerLink advertisement on NamuWiki.',
+      ko: 'NamuLink는 나무위키에 있는 파워링크 광고를 차단합니다.'
     }
   })
 
