@@ -11,147 +11,47 @@
 type unsafeWindow = typeof window
 // eslint-disable-next-line @typescript-eslint/naming-convention
 declare const unsafeWindow: unsafeWindow
-import * as SPA from './spa.js'
-import * as Sort from './sort.js'
 
 const Win = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window
 
-export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptName: string = 'NamuLink'): void {
-  const ProtectedFunctionPrototypeToString = BrowserWindow.Function.prototype.toString
+export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptName: string = 'NamuLink'): void {    
+  const OriginalFunctionPrototypeCall = BrowserWindow.Function.prototype.call
+  const OriginalReflectApply = BrowserWindow.Reflect.apply
 
-  let PowerLinkGenerationPositiveRegExps: RegExp[][] = [[
-    /for *\( *; *; *\) *switch *\( *_[a-z0-9]+\[_[a-z0-9]+\([a-z0-9]+\)\] *=_[a-z0-9]+/,
-    /_[a-z0-9]+\[('|")[A-Z]+('|")\]\)\(\[ *\]\)/,
-    /0x[a-z0-9]+ *\) *; *case/
-  ], [
-    /; *return *this\[_0x[a-z0-9]+\( *0x[0-9a-z]+ *\)/,
-    /; *if *\( *_0x[a-z0-9]+ *&& *\( *_0x[a-z0-9]+ *= *_0x[a-z0-9]+/,
-    /\) *, *void *\( *this *\[ *_0x[a-z0-9]+\( *0x[0-9a-z]+ *\) *\] *= *_0x[a-z0-9]+ *\[/
+  const PowerLinkMajorFuncCallPatterns: RegExp[][] = [[
+    /function *\( *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *\) *{ *var *_0x[a-f0-9]+/,
+    /('|")td('|") *, *{ *('|")class('|") *: *\( *-? *0x[a-f0-9]+ *\+ *-? *0x[a-f0-9]+ *\+ *0x[a-f0-9]+ *, *_0x[a-f0-9]+ *\[ *_0x[a-f0-9]+ */,
+    /\( *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\) *, *('|")onClick('|") *: *_0x[a-f0-9]+ *\[ *-? *0x[a-f0-9]+ *\* *-? *0x[a-f0-9]+/,
+    /_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\) *, *('|")colspan('|") *: *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *=== *_0x[a-f0-9]+ *\[ *_0x[a-f0-9]+ *\(/
+  ]]
+  const FalsePositiveSignPatterns: RegExp[][] = [[
+    /new *Map *\( *Object *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\( *{ *('|")pretendard('|") *: *{ *('|")fontFamily('|") *: */,
+    /('|")fontFamily('|") *: *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *, *('|")styleUrl('|") *: *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *, *('|")isGoogleFonts/,
+    /('|")popper--wide('|") *: *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *, *('|")popper__title('|") *: *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *} *} *,/
   ]]
 
-  BrowserWindow.Function.prototype.bind = new Proxy(BrowserWindow.Function.prototype.bind, {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-      apply(Target: typeof Function.prototype.bind, ThisArg: Function, Args: Parameters<typeof Function.prototype.bind>) {
-        let StringifiedFunc = Reflect.apply(ProtectedFunctionPrototypeToString, ThisArg, Args) as string
-        if (PowerLinkGenerationPositiveRegExps.filter(PowerLinkGenerationPositiveRegExp => PowerLinkGenerationPositiveRegExp.filter(Index => Index.test(StringifiedFunc)).length >= 3).length === 1) {
-          console.debug(`[${UserscriptName}]: Function.prototype.bind:`, ThisArg)
-          return Reflect.apply(Target, () => {}, [])
-        }
-        return Reflect.apply(Target, ThisArg, Args)
+  let InHook = false
+  BrowserWindow.Function.prototype.call = new Proxy(OriginalFunctionPrototypeCall, {
+    apply(Target: typeof Function.prototype.call, ThisArg: unknown, Args: unknown[]) {
+      // Prevent infinite recursion when the hook itself calls Function.prototype.call
+      if (InHook) {
+        return OriginalReflectApply(Target, ThisArg, Args)
       }
-    })
+      InHook = true
 
-  let PowerLinkGenerationSkeletionPositiveRegExps: RegExp[][] = [[
-    /\( *\) *=> *{ *var *_0x[0-9a-z]+ *= *a0_0x[0-9a-f]+ *; *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\]\(\); *}/,
-    /\( *\) *=> *{ *var *_0x[0-9a-z]+ *= *a0_0x[0-9a-f]+ *; *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\]\(\); *}/
-  ], [
-    /\( *\) *=> *{ *var _0x[a-z0-9]+ *= *_0x[a-z0-9]+ *; *if *\( *this\[ *_0x[a-z0-9]+ *\( *0x[0-9a-f]+ *\) *\] *\) *return *clearTimeout/,
-    /\( *0x[0-9a-f]+ *\) *\] *\) *, *void *\( *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\] *= *void *\([x0-9a-f*+-]+ *\) *\) *; *this\[_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\] *\(\) *;/
-  ]]
-
-  function GetParents(Ele: HTMLElement) {
-    let Parents: HTMLElement[] = []
-    while (Ele.parentElement) {
-      Parents.push(Ele.parentElement)
-      Ele = Ele.parentElement
-    }
-    return Parents
-  }
-
-  const HidePowerLinkPlaceholderWithAccount = () => {
-     let AdContainers = [...document.querySelectorAll('div[class*=" "] div[class]')].filter(AdContainer => AdContainer instanceof HTMLElement)
-
-      AdContainers = AdContainers.filter((AdContainer) => {
-        let AdContainerPaddingLeft = Number(getComputedStyle(AdContainer).getPropertyValue('padding-left').replaceAll('px', ''))
-        let AdContainerPaddingRight = Number(getComputedStyle(AdContainer).getPropertyValue('padding-right').replaceAll('px', ''))
-        let AdContainerPaddingTop = Number(getComputedStyle(AdContainer).getPropertyValue('padding-top').replaceAll('px', ''))
-        let AdContainerPaddingBottom = Number(getComputedStyle(AdContainer).getPropertyValue('padding-bottom').replaceAll('px', ''))
-        return AdContainerPaddingLeft > 5 && AdContainerPaddingRight > 5 && AdContainerPaddingTop > 5 && AdContainerPaddingBottom > 5
-      })
-
-      AdContainers = AdContainers.filter(AdContainer => {
-        return [...AdContainer.querySelectorAll('*')].filter(Ele => Ele instanceof HTMLElement &&
-          getComputedStyle(Ele).getPropertyValue('animation-timing-function') === 'ease-in-out').length >= 3
-      })
-
-      AdContainers = AdContainers.filter(AdContainer => GetParents(AdContainer).some(Parent => Number(getComputedStyle(Parent).getPropertyValue('margin-top').replaceAll('px', '')) > 10 ))
-
-      AdContainers = AdContainers.filter(AdContainer => AdContainer.innerText.length < 1000)
-
-      AdContainers = AdContainers.filter(AdContainer => [...AdContainer.querySelectorAll('*[href="/RecentChanges"]')].filter(Ele => Ele instanceof HTMLElement && getComputedStyle(Ele).getPropertyValue('display') !== 'none').length === 0)
-
-      AdContainers = AdContainers.filter(AdContainer => !AdContainer.innerText.includes((new URL(location.href).searchParams.get('from') || '') + '에서 넘어옴'))
-
-      AdContainers = AdContainers.filter(AdContainer => !/\[[0-9]+\] .+/.test(AdContainer.innerText))
-
-      AdContainers.forEach(Ele => Ele.setAttribute('style', 'display: none !important; visibility: hidden !important;'))
-  }
-
-  BrowserWindow.setTimeout = new Proxy(BrowserWindow.setTimeout, {
-    apply(Target: typeof setTimeout, ThisArg: undefined, Args: Parameters<typeof setTimeout>) {
-      let StringifiedFunc = Reflect.apply(ProtectedFunctionPrototypeToString, Args[0], Args) as string
-      if (PowerLinkGenerationSkeletionPositiveRegExps.filter(PowerLinkGenerationSkeletionPositiveRegExp => PowerLinkGenerationSkeletionPositiveRegExp.filter(Index => Index.test(StringifiedFunc)).length >= 1).length === 1) {
-        console.debug(`[${UserscriptName}]: setTimeout:`, Args[0])
-        return Reflect.apply(Target, ThisArg, [HidePowerLinkPlaceholderWithAccount, 1500])
-      }
-
-      return Reflect.apply(Target, ThisArg, Args)
+      const Stringified = String(ThisArg)
+      if (Stringified.length < 50000 &&
+        !FalsePositiveSignPatterns.some(Patterns => Patterns.every(Pattern => Pattern.test(Stringified))) &&
+        PowerLinkMajorFuncCallPatterns.filter(Patterns => Patterns.filter(Pattern => Pattern.test(Stringified)).length === Patterns.length).length === 1) {
+        console.debug(`[${UserscriptName}]: Function.prototype.call called for PowerLink Skeleton:`, ThisArg)
+        InHook = false
+        return OriginalReflectApply(Target, () => {}, [])
+      } 
+      
+      InHook = false
+      return OriginalReflectApply(Target, ThisArg, Args)
     }
   })
-
-  if (document.readyState === 'loading') {
-    window.addEventListener('DOMContentLoaded', () => {
-      SPA.InstallSpaNavigationBridge({
-      Root: () => document.getElementById('#app'),
-      StableForMs: 900,
-      SampleWindowMs: 900,
-      Threshold: 3,
-      TimeoutMs: 12000,
-      IgnoreMutation: SPA.DefaultIgnoreMutation,
-      WatchHashChange: true
-    })
-  })
-  } else {
-    // 이미 DOMContentLoaded 이후
-    window.addEventListener('DOMContentLoaded', () => {
-      SPA.InstallSpaNavigationBridge({
-      Root: () => document.getElementById('#app'),
-      StableForMs: 900,
-      SampleWindowMs: 900,
-      Threshold: 3,
-      TimeoutMs: 12000,
-      IgnoreMutation: SPA.DefaultIgnoreMutation,
-      WatchHashChange: true
-      })
-    })
-  }
-
-  const Handler = async () => {
-    let HTMLEle = Sort.CollectDataVAttributes(document)
-    const { Result, TotalKeys, WorkerCount, HardwareConcurrency } = await Sort.RankCountsWithWorkersParallel(HTMLEle)
-    let TargetedAttrsDOMs: HTMLElement[] = []
-    Result.filter(([, Count]) => Count <= 30).forEach(([Attr, Count]) => {
-      TargetedAttrsDOMs.push(...[...document.querySelectorAll(`[${Attr}]`)].filter((El) => El instanceof HTMLElement))
-    })
-    TargetedAttrsDOMs = TargetedAttrsDOMs.filter(El => getComputedStyle(El).getPropertyValue('display') === 'flex')
-    TargetedAttrsDOMs = TargetedAttrsDOMs.filter(El => [...El.querySelectorAll('*')].some(Child => Child instanceof HTMLElement && typeof Child.click === 'function'))
-    TargetedAttrsDOMs = TargetedAttrsDOMs.filter(El => [...El.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement && Child.getBoundingClientRect().bottom - Child.getBoundingClientRect().top > 100 && Child.getBoundingClientRect().right - Child.getBoundingClientRect().left > 100).length <= 50)
-    TargetedAttrsDOMs = TargetedAttrsDOMs.filter(El => {
-      let Count = [...El.querySelectorAll('*')].filter(Child => (Child.getBoundingClientRect().bottom - Child.getBoundingClientRect().top > 25 && Child.getBoundingClientRect().right - Child.getBoundingClientRect().left > 25 && (Child instanceof SVGPathElement && Child.getAttribute('d') !== null) || (Child instanceof HTMLImageElement && Child.src.includes('//i.namu.wiki/i/')))).length
-      return 1 <= Count && Count <= 6
-    })
-    TargetedAttrsDOMs = TargetedAttrsDOMs.filter(El => [...El.querySelectorAll('*')].some(Child => Child instanceof HTMLElement && getComputedStyle(Child, '::after').getPropertyValue('content').includes(':') && Child.getBoundingClientRect().right - Child.getBoundingClientRect().left > 20) === false)
-    TargetedAttrsDOMs = TargetedAttrsDOMs.filter(El => [...El.querySelectorAll('*')].every(Child => Child instanceof HTMLElement && !new Date(Child.getHTML()).getTime()))
-    console.debug(`[${UserscriptName}]`, TargetedAttrsDOMs)
-    TargetedAttrsDOMs.forEach(El => {
-      setInterval(() => {
-        El.setAttribute('style', 'display: none !important; visibility: hidden !important;')
-      }, 250)
-    })
-  }
-
-  window.addEventListener('SpaRendered', () => setTimeout(Handler, 2500))
-  window.addEventListener('SpaRendered', Handler)
 }
 
 RunNamuLinkUserscript(Win)
