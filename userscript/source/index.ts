@@ -19,7 +19,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
   const OriginalReflectApply = BrowserWindow.Reflect.apply
   let PL2Event = new CustomEvent('PL2PlaceHolder')
 
-  const PowerLinkMajorFuncCallPatterns: RegExp[][] = [[
+  const PL2MajorFuncCallPatterns: RegExp[][] = [[
     /function *\( *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *\) *{ *var *_0x[a-f0-9]+/,
     /('|")td('|") *, *{ *('|")class('|") *: *\( *-? *0x[a-f0-9]+ *\+ *-? *0x[a-f0-9]+ *\+ *0x[a-f0-9]+ *, *_0x[a-f0-9]+ *\[ *_0x[a-f0-9]+ */,
     /\( *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\) *, *('|")onClick('|") *: *_0x[a-f0-9]+ *\[ *-? *0x[a-f0-9]+ *\* *-? *0x[a-f0-9]+/,
@@ -43,7 +43,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
       const Stringified = String(ThisArg)
       if (Stringified.length < 50000 &&
         !FalsePositiveSignPatterns.some(Patterns => Patterns.every(Pattern => Pattern.test(Stringified))) &&
-        PowerLinkMajorFuncCallPatterns.filter(Patterns => Patterns.filter(Pattern => Pattern.test(Stringified)).length === Patterns.length).length === 1) {
+        PL2MajorFuncCallPatterns.filter(Patterns => Patterns.filter(Pattern => Pattern.test(Stringified)).length === Patterns.length).length === 1) {
         console.debug(`[${UserscriptName}]: Function.prototype.call called for PowerLink Skeleton:`, ThisArg)
         BrowserWindow.document.dispatchEvent(PL2Event)
         InHook = false
