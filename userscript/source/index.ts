@@ -72,9 +72,10 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
       ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-top-width').replaceAll(/px/g, '')) >= 0.5))
       ContainerElements = new Set([...ContainerElements].filter(Container => [...Container.querySelectorAll('*')].some(Child => {
         if (!(Child instanceof HTMLElement)) return false
-         let PL2TitleHeight = Child.getClientRects()[0]?.height ?? 0
-         let PL2TitleMarginBottom = Number(getComputedStyle(Child).getPropertyValue('margin-bottom').replaceAll(/px/g, ''))
-         return PL2TitleMarginBottom >= PL2TitleHeight * 0.75 && PL2TitleMarginBottom <= PL2TitleHeight * 1.25
+        let PL2TitleHeight = Child.getClientRects()[0]?.height ?? 0
+        let PL2TitleMarginBottom = Number(getComputedStyle(Child).getPropertyValue('margin-bottom').replaceAll(/px/g, ''))
+        if (PL2TitleHeight === 0) return false
+        return PL2TitleMarginBottom >= PL2TitleHeight * 0.75 && PL2TitleMarginBottom <= PL2TitleHeight * 1.25
       })))
       console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers:`, ContainerElements)
       ContainerElements.forEach(Container => {
