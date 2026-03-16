@@ -71,6 +71,26 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         Container.setAttribute('style', 'display: none !important;')
       })
     }, 2500)
+
+    setTimeout(() => {
+      let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class*=" "] div[class*=" "] ~ div[class*=" "]')])
+      ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement))
+      ContainerElements = new Set([...ContainerElements].filter(Container =>
+        Number(getComputedStyle(Container).getPropertyValue('margin-bottom').replaceAll(/px$/g, '')) > 15 ||
+        Number(getComputedStyle(Container).getPropertyValue('padding-top').replaceAll(/px$/g, '')) > 20
+      ))
+      ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement && Container.innerText.trim().length === 0))
+      ContainerElements = new Set([...ContainerElements].filter(Container => [...Container.querySelectorAll('*')].some(Child => Child instanceof HTMLElement &&
+        (Number(getComputedStyle(Child).getPropertyValue('padding-top').replaceAll(/px/g, '')) >= 5 &&
+        Number(getComputedStyle(Child).getPropertyValue('padding-bottom').replaceAll(/px/g, '')) >= 5 &&
+        Number(getComputedStyle(Child).getPropertyValue('padding-left').replaceAll(/px/g, '')) >= 5 &&
+        Number(getComputedStyle(Child).getPropertyValue('padding-right').replaceAll(/px/g, '')) >= 5)
+      )))
+      console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers:`, ContainerElements)
+      ContainerElements.forEach(Container => {
+        Container.setAttribute('style', 'display: none !important;')
+      })
+    }, 2500)
   })
 }
 
