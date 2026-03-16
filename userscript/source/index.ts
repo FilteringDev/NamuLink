@@ -24,6 +24,11 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     /('|")td('|") *, *{ *('|")class('|") *: *\( *-? *0x[a-f0-9]+ *\+ *-? *0x[a-f0-9]+ *\+ *0x[a-f0-9]+ *, *_0x[a-f0-9]+ *\[ *_0x[a-f0-9]+ */,
     /\( *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\) *, *('|")onClick('|") *: *_0x[a-f0-9]+ *\[ *-? *0x[a-f0-9]+ *\* *-? *0x[a-f0-9]+/,
     /_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\) *, *('|")colspan('|") *: *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *=== *_0x[a-f0-9]+ *\[ *_0x[a-f0-9]+ *\(/
+  ], [
+    /function *\( *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *\) *{ *var *_0x[a-f0-9]+/,
+    /\( *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\) *, *('|")onClick('|") *: *_0x[a-f0-9]+ *\[ *-? *0x[a-f0-9]+ *\* *-? *0x[a-f0-9]+/,
+    /_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\) *\( *_0x[a-f0-9]+ *=> *_0x[a-f0-9]+ *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\( *_0x[a-f0-9]+/,
+    / *, *{ *('|")class('|") *: *\( *-? *0x[a-f0-9,_+*x-]+ *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\) *\( *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\) *} *, *\[ *! *_0x[a-f0-9]+/
   ]]
   const FalsePositiveSignPatterns: RegExp[][] = [[
     /new *Map *\( *Object *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\( *{ *('|")pretendard('|") *: *{ *('|")fontFamily('|") *: */,
@@ -48,8 +53,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         BrowserWindow.document.dispatchEvent(PL2Event)
         InHook = false
         return OriginalReflectApply(Target, () => {}, [])
-      } 
-      
+      }
       InHook = false
       return OriginalReflectApply(Target, ThisArg, Args)
     }
@@ -57,7 +61,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
 
   BrowserWindow.document.addEventListener('PL2PlaceHolder', () => {
     setTimeout(() => {
-      let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class*=" "] div[class*=" "] ~ div[class*=" "]')])
+      let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class] div[class] ~ div[class]')])
       ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement))
       ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('padding-top').replaceAll(/px$/g, '')) > 20))
       ContainerElements = new Set([...ContainerElements, ...[...ContainerElements].flatMap(Container => [...Container.querySelectorAll('*')])])
