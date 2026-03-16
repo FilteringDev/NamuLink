@@ -77,7 +77,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     }, 2500)
 
     setTimeout(() => {
-      let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class*=" "] div[class*=" "] ~ div[class*=" "]')])
+      let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class] div[class] ~ div[class]')])
       ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement))
       ContainerElements = new Set([...ContainerElements].filter(Container =>
         Number(getComputedStyle(Container).getPropertyValue('margin-bottom').replaceAll(/px$/g, '')) > 15 ||
