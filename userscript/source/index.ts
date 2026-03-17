@@ -59,6 +59,26 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     }
   })
 
+  let PL2AfterLoadInitTimerPatterns: RegExp[][] = [[
+    /\( *\) *=> *{ *var *_0x[0-9a-z]+ *= *a0_0x[0-9a-f]+ *; *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\]\(\); *}/,
+    /\( *\) *=> *{ *var *_0x[0-9a-z]+ *= *a0_0x[0-9a-f]+ *; *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\]\(\); *}/
+  ], [
+    /\( *\) *=> *{ *var _0x[a-z0-9]+ *= *_0x[a-z0-9]+ *; *if *\( *this\[ *_0x[a-z0-9]+ *\( *0x[0-9a-f]+ *\) *\] *\) *return *clearTimeout/,
+    /\( *0x[0-9a-f]+ *\) *\] *\) *, *void *\( *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\] *= *void *\([x0-9a-f*+-]+ *\) *\) *; *this\[_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\] *\(\) *;/
+  ]]
+
+  BrowserWindow.setTimeout = new Proxy(BrowserWindow.setTimeout, {
+    apply(Target: typeof setTimeout, ThisArg: undefined, Args: Parameters<typeof setTimeout>) {
+      let StringifiedFunc = String(Args[0])
+      if (PL2AfterLoadInitTimerPatterns.filter(PowerLinkGenerationSkeletionPositiveRegExp => PowerLinkGenerationSkeletionPositiveRegExp.filter(Index => Index.test(StringifiedFunc)).length >= 1).length === 1) {
+        console.debug(`[${UserscriptName}]: setTimeout called for PowerLink Skeleton:`, Args[0])
+        return OriginalReflectApply(Target, ThisArg, [() => {}, 0])
+      }
+
+      return OriginalReflectApply(Target, ThisArg, Args)
+    }
+  })
+
   BrowserWindow.document.addEventListener('PL2PlaceHolder', () => {
     setTimeout(() => {
       let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class] div[class] ~ div[class]')])
