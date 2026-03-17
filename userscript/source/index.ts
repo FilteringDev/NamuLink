@@ -83,7 +83,10 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     setTimeout(() => {
       let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class] div[class] ~ div[class]')])
       ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement))
-      ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('padding-top').replaceAll(/px$/g, '')) > 10))
+      ContainerElements = new Set([...ContainerElements].filter(Container => {
+        return Number(getComputedStyle(Container).getPropertyValue('padding-top').replaceAll(/px$/g, '')) > 10 ||
+          Number(getComputedStyle(Container).getPropertyValue('margin-top').replaceAll(/px$/g, '')) > 10
+      }))
       ContainerElements = new Set([...ContainerElements, ...[...ContainerElements].flatMap(Container => [...Container.querySelectorAll('*')])])
       ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement && Container.innerText.trim().length === 0))
       ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-bottom-width').replaceAll(/px/g, '')) >= 0.5))
@@ -95,7 +98,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         let PL2TitleHeight = Child.getClientRects()[0]?.height ?? 0
         let PL2TitleMarginBottom = Number(getComputedStyle(Child).getPropertyValue('margin-bottom').replaceAll(/px/g, ''))
         if (PL2TitleHeight === 0) return false
-        return PL2TitleMarginBottom >= PL2TitleHeight * 0.75 && PL2TitleMarginBottom <= PL2TitleHeight * 1.25
+        return PL2TitleMarginBottom >= PL2TitleHeight * 0.65 && PL2TitleMarginBottom <= PL2TitleHeight * 1.25
       })))
       console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers:`, ContainerElements)
       ContainerElements.forEach(Container => {
