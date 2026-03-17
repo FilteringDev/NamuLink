@@ -98,9 +98,11 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         return PL2TitleMarginBottom >= PL2TitleHeight * 0.75 && PL2TitleMarginBottom <= PL2TitleHeight * 1.25
       })))
       console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers:`, ContainerElements)
-      ContainerElements.forEach(Container => {
-        Container.setAttribute('style', 'display: none !important;')
-      })
+      for (let I = 0; I < ContainerElements.size * 5; I++) {
+        ContainerElements.forEach(Container => {
+          Container.setAttribute('style', 'display: none !important;')
+        })
+      }
     }, 2500)
 
     setTimeout(() => {
@@ -118,9 +120,11 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         Number(getComputedStyle(Child).getPropertyValue('padding-right').replaceAll(/px/g, '')) >= 5)
       )))
       console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers:`, ContainerElements)
-      ContainerElements.forEach(Container => {
-        Container.setAttribute('style', 'display: none !important;')
-      })
+      for (let I = 0; I < ContainerElements.size * 5; I++) {
+        ContainerElements.forEach(Container => {
+          Container.setAttribute('style', 'display: none !important;')
+        })
+      }
     }, 2500)
   })
 }
