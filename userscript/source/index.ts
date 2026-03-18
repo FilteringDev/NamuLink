@@ -17,7 +17,6 @@ const Win = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window
 export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptName: string = 'NamuLink'): void {    
   const OriginalFunctionPrototypeCall = BrowserWindow.Function.prototype.call
   const OriginalReflectApply = BrowserWindow.Reflect.apply
-  let PL2Event = new CustomEvent('PL2PlaceHolder')
 
   const PL2MajorFuncCallPatterns: RegExp[][] = [[
     /function *\( *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *\) *{ *var *_0x[a-f0-9]+/,
@@ -34,6 +33,11 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     /\( *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\) *, *('|")onClick('|") *: *_0x[a-f0-9]+ *\[ *-? *0x[a-f0-9]+ *\* *-? *0x[a-f0-9]+/,
     /_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\) *\( *_0x[a-f0-9]+ *=> *_0x[a-f0-9]+ *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\( *_0x[a-f0-9]+/,
     /_0x[a-f0-9]+ *\[ *['"a-zA-Z0-9_-]+ *\] *\) *\( *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *, *null *,\[ *Array *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\]/
+  ], [
+    /function *\( *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *, *_0x[a-f0-9]+ *\) *{ *var *_0x[a-f0-9]+/,
+    /_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\) *\( *_0x[a-f0-9]+ *=> *_0x[a-f0-9]+ *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\( *_0x[a-f0-9]+/,
+    /('|")onClick('|") *: *\( *-? *[x0-9a-f+-]+ *, *_0x[0-9a-f]+ *\[ *_0x[0-9a-f]+ *\( *0x[0-9a-f]+ *\) *\] *\) *\( *\( *\) *=> *_0x[0-9a-f]+/,
+    /('|")colspan('|") *: *('|")[0-9]+('|") *, *('|")class('|") *: *\( *-? *[xa-f0-9*+-]+ *, *_0x[a-f0-9]+ *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\) *\( *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *,/
   ]]
   const FalsePositiveSignPatterns: RegExp[][] = [[
     /new *Map *\( *Object *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\( *{ *('|")pretendard('|") *: *{ *('|")fontFamily('|") *: */,
@@ -41,6 +45,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     /('|")popper--wide('|") *: *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *, *('|")popper__title('|") *: *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *} *} *,/
   ]]
 
+  let CommentContainer: Element = null
   let InHook = false
   BrowserWindow.Function.prototype.call = new Proxy(OriginalFunctionPrototypeCall, {
     apply(Target: typeof Function.prototype.call, ThisArg: unknown, Args: unknown[]) {
@@ -55,7 +60,12 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         !FalsePositiveSignPatterns.some(Patterns => Patterns.every(Pattern => Pattern.test(Stringified))) &&
         PL2MajorFuncCallPatterns.filter(Patterns => Patterns.filter(Pattern => Pattern.test(Stringified)).length === Patterns.length).length === 1) {
         console.debug(`[${UserscriptName}]: Function.prototype.call called for PowerLink Skeleton:`, ThisArg)
-        BrowserWindow.document.dispatchEvent(PL2Event)
+        if (typeof Args[6] === 'object' && typeof Args[6]['_'] === 'object' && typeof Args[6]['_']['vnode'] === 'object' &&
+          Args[6]['_']['vnode'] !== null && typeof Args[6]['_']['vnode']['el'] === 'object' && Args[6]['_']['vnode']['el'] instanceof HTMLElement) {
+          CommentContainer = Args[6]['_']['vnode']['el'] as HTMLElement
+        }
+        BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolder'))
+        BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderMobile'))
         InHook = false
         return OriginalReflectApply(Target, () => {}, [])
       }
@@ -84,16 +94,10 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     }
   })
 
-  BrowserWindow.document.addEventListener('PL2PlaceHolder', () => {
+  BrowserWindow.document.addEventListener('PL2AdvertContainer', () => {
     setTimeout(() => {
-      let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class] div[class] ~ div[class]')])
-      ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement))
-      ContainerElements = new Set([...ContainerElements].filter(Container => {
-        return Number(getComputedStyle(Container).getPropertyValue('padding-top').replaceAll(/px$/g, '')) > 10 ||
-          Number(getComputedStyle(Container).getPropertyValue('margin-top').replaceAll(/px$/g, '')) > 10
-      }))
+      let ContainerElements = new Set([CommentContainer])
       ContainerElements = new Set([...ContainerElements, ...[...ContainerElements].flatMap(Container => [...Container.querySelectorAll('*')])])
-      ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement && Container.innerText.trim().length === 0))
       ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-bottom-width').replaceAll(/px/g, '')) >= 0.5))
       ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-left-width').replaceAll(/px/g, '')) >= 0.5))
       ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-right-width').replaceAll(/px/g, '')) >= 0.5))
@@ -105,12 +109,14 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         if (PL2TitleHeight === 0) return false
         return PL2TitleMarginBottom >= PL2TitleHeight * 0.65 && PL2TitleMarginBottom <= PL2TitleHeight * 1.25
       })))
-      console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers:`, ContainerElements)
+      console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers (PL2AdvertContainer):`, ContainerElements)
       ContainerElements.forEach(Container => {
         Container.setAttribute('style', 'display: none !important;')
       })
     }, 2500)
-
+  })
+  
+  BrowserWindow.document.addEventListener('PL2PlaceHolderMobile', () => {
     setTimeout(() => {
       let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class] div[class] ~ div[class]')])
       ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement))
@@ -125,11 +131,33 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         Number(getComputedStyle(Child).getPropertyValue('padding-left').replaceAll(/px/g, '')) >= 5 &&
         Number(getComputedStyle(Child).getPropertyValue('padding-right').replaceAll(/px/g, '')) >= 5)
       )))
-      console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers:`, ContainerElements)
+      console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers (PL2PlaceHolderMobile):`, ContainerElements)
       ContainerElements.forEach(Container => {
         Container.setAttribute('style', 'display: none !important;')
       })
     }, 2500)
+
+    BrowserWindow.document.addEventListener('PL2PlaceHolder', () => {
+      setTimeout(() => {
+        let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class] div[class] ~ div[class]')])
+        ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement))
+        ContainerElements = new Set([...ContainerElements].filter(Container => {
+          return Number(getComputedStyle(Container).getPropertyValue('padding-top').replaceAll(/px$/g, '')) > 10 ||
+            Number(getComputedStyle(Container).getPropertyValue('margin-top').replaceAll(/px$/g, '')) > 10
+        }))
+        ContainerElements = new Set([...ContainerElements, ...[...ContainerElements].flatMap(Container => [...Container.querySelectorAll('*:not(button)')])])
+        ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement && Container.innerText.trim().length === 0))
+        ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-bottom-width').replaceAll(/px/g, '')) >= 0.5))
+        ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-left-width').replaceAll(/px/g, '')) >= 0.5))
+        ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-right-width').replaceAll(/px/g, '')) >= 0.5))
+        ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-top-width').replaceAll(/px/g, '')) >= 0.5))
+        ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('transition-duration').replaceAll(/s$/g, '')) >= 0.01))
+        console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers (PL2PlaceHolder):`, ContainerElements)
+        ContainerElements.forEach(Container => {
+          Container.setAttribute('style', 'display: none !important;')
+        })
+      }, 2500)
+    })
   })
 }
 
