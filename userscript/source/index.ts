@@ -19,16 +19,36 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
   const OriginalReflectApply = BrowserWindow.Reflect.apply
 
   const PL2MajorFuncCallPatterns: RegExp[][] = [[
-    /function *\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *\) *{ *const *[A-Za-z0-9]+ *=/,
-    /{ *\[ *[A-Za-z0-9]+ *\] *: *[a-f0-9x+*-]+ *, *(('|")[A-Za-z0-9]+('|")|[A-Za-z0-9 ()\[\]+*-]+) *: *[A-Za-z0-9]+ *\[ *[A-Za-z0-9]+ *\([a-f0-9x+*-]+ *,/,
-    /[a-f0-9x+*-]+ *\) *\) *\] *\) *\) *: *[A-Za-z0-9]+ *\( *[a-f0-9x+*-]+ *, *[a-f0-9x+*-]+ *\) *=== *[A-Za-z0-9]+ *\[ *[A-Za-z0-9]+ *\([a-f0-9x+*-]+ *, *[a-f0-9x+*-]+ *\) *\] *\? *\(/,
-    /[a-zA-Z0-9]+ *\[ *('|")[a-zA-Z0-9]+('|") *\] *\) *\( *[a-zA-Z0-9]+ *, *{ *\[ *[a-zA-Z0-9]+ *\] *: *[0-9xa-f*+-]+ *,(('|")[A-Za-z0-9]+('|")|[A-Za-z0-9 ()\[\]+*-]+) *: *[a-zA-Z0-9]+ *\[ *[a-zA-Z0-9]+ *\( *[0-9xa-f*+-]+ *. *[0-9xa-f*+-]+ *\) *\] *\[/
+    /function *\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *\) *{ *return *[A-Za-z.-9]+/,
+    /, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *\) *{ *return *[A-Za-z.-9]+ *\( *[0-9a-fx *+-]+ *, *[A-Za-z.-9]+ *, *[A-Za-z.-9]+ *, *[0-9a-fx *+-]+/,
+    /return *[A-Za-z.-9]+ *\( *[0-9a-fx *+-]+ *, *[A-Za-z.-9]+ *, *[A-Za-z.-9]+ *, *[0-9a-fx *+-]+ *,[A-Za-z.-9]+ *, *[A-Za-z.-9]+ * *\) *; *}/
   ]]
-  const FalsePositiveSignPatterns: RegExp[][] = [[
-    /new *Map *\( *Object *\[ *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *\] *\( *{ *('|")pretendard('|") *: *{ *('|")fontFamily('|") *: */,
-    /('|")fontFamily('|") *: *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *, *('|")styleUrl('|") *: *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *, *('|")isGoogleFonts/,
-    /('|")popper--wide('|") *: *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *, *('|")popper__title('|") *: *_0x[a-f0-9]+ *\( *0x[a-f0-9]+ *\) *} *} *,/
-  ]]
+
+  function GetPowerLinkElementFromArg(Arg: unknown): HTMLElement | null {
+    if (typeof Arg !== 'object' || Arg === null) return null
+
+    const Visited = new Set<object>()
+    let Current = (Arg as Record<string, unknown>)['_']
+
+    while (typeof Current === 'object' && Current !== null) {
+      if (Visited.has(Current)) break
+      Visited.add(Current)
+
+      const VNode = (Current as Record<string, unknown>)['vnode']
+      if (typeof VNode === 'object' && VNode !== null) {
+        const Element = (VNode as Record<string, unknown>)['el']
+        if (Element instanceof HTMLElement) return Element
+      }
+
+      Current = (Current as Record<string, unknown>)['parent']
+    }
+
+    return null
+  }
+  const MinRatio = 0.35
+  const MaxRatio = 0.75
+  const EpsilonRatio = 0.04
+
 
   let CommentContainer: Element = null
   let InHook = false
@@ -41,18 +61,23 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
       InHook = true
 
       const Stringified = String(ThisArg)
-      if (Stringified.length < 50000 &&
-        !FalsePositiveSignPatterns.some(Patterns => Patterns.every(Pattern => Pattern.test(Stringified))) &&
-        PL2MajorFuncCallPatterns.filter(Patterns => Patterns.filter(Pattern => Pattern.test(Stringified)).length === Patterns.length).length === 1) {
-        console.debug(`[${UserscriptName}]: Function.prototype.call called for PowerLink Skeleton:`, ThisArg)
-        if (typeof Args[6] === 'object' && typeof Args[6]['_'] === 'object' && typeof Args[6]['_']['vnode'] === 'object' &&
-          Args[6]['_']['vnode'] !== null && typeof Args[6]['_']['vnode']['el'] === 'object' && Args[6]['_']['vnode']['el'] instanceof HTMLElement) {
-          CommentContainer = Args[6]['_']['vnode']['el'] as HTMLElement
+      if (Stringified.length < 500 && PL2MajorFuncCallPatterns.filter(Patterns => Patterns.filter(Pattern => Pattern.test(Stringified)).length === Patterns.length).length === 1) {
+        let PL2Element: HTMLElement | null = GetPowerLinkElementFromArg(Args[6])
+        if (PL2Element !== null && [...PL2Element.querySelectorAll('*')].filter(Child => {
+          if (!(Child instanceof HTMLElement)) return false
+          let PL2TitleHeight = Child.getClientRects()[0]?.height ?? 0
+          let PL2TitleMarginBottom = Math.max(Number(getComputedStyle(Child).getPropertyValue('padding-bottom').replaceAll(/px/g, '')),
+            Number(getComputedStyle(Child).getPropertyValue('margin-bottom').replaceAll(/px/g, '')))
+          return PL2TitleHeight > 0 && PL2TitleMarginBottom >= PL2TitleHeight * (MinRatio - EpsilonRatio) && PL2TitleMarginBottom <= PL2TitleHeight * (MaxRatio + EpsilonRatio)
+        }).length >= 1) {
+          console.debug(`[${UserscriptName}]: Function.prototype.call called for PowerLink Skeleton:`, ThisArg)
+          CommentContainer = PL2Element
+          BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolder'))
+          BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderMobile'))
+          InHook = false
+          return OriginalReflectApply(Target, () => {}, [])
         }
-        BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolder'))
-        BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderMobile'))
-        InHook = false
-        return OriginalReflectApply(Target, () => {}, [])
+        console.debug(`[${UserscriptName}]: Matched Function.prototype.call called, but not for PowerLink Skeleton:`, ThisArg)
       }
       InHook = false
       return OriginalReflectApply(Target, ThisArg, Args)
