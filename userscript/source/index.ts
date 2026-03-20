@@ -17,14 +17,19 @@ const Win = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window
 export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptName: string = 'NamuLink'): void {    
   const OriginalFunctionPrototypeCall = BrowserWindow.Function.prototype.call
   const OriginalReflectApply = BrowserWindow.Reflect.apply
+  const OriginalObjectDefineProperty = BrowserWindow.Object.defineProperty
 
   const PL2MajorFuncCallPatterns: RegExp[][] = [[
     /function *\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *\) *{ *return *[A-Za-z.-9]+/,
     /, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *\) *{ *return *[A-Za-z.-9]+ *\( *[0-9a-fx *+-]+ *, *[A-Za-z.-9]+ *, *[A-Za-z.-9]+ *, *[0-9a-fx *+-]+/,
     /return *[A-Za-z.-9]+ *\( *[0-9a-fx *+-]+ *, *[A-Za-z.-9]+ *, *[A-Za-z.-9]+ *, *[0-9a-fx *+-]+ *,[A-Za-z.-9]+ *, *[A-Za-z.-9]+ * *\) *; *}/
+  ], [
+    /function *[A-Za-z0-9]+ *\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *\) *{ *return *[A-Za-z.-9]+/,
+    /, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *\) *{ *return *[A-Za-z.-9]+ *\( *[0-9a-fx *+-]+ *, *[A-Za-z.-9]+ *, *[A-Za-z.-9]+ *, *[0-9a-fx *+-]+/,
+    /return *[A-Za-z.-9]+ *\( *[0-9a-fx *+-]+ *, *[A-Za-z.-9]+ *, *[A-Za-z.-9]+ *, *[0-9a-fx *+-]+ *,[A-Za-z.-9]+ *, *[A-Za-z.-9]+ * *\) *; *}/
   ]]
 
-  function GetPowerLinkElementFromArg(Arg: unknown): HTMLElement | null {
+  function PowerLinkElementFromArg(Arg: unknown): HTMLElement | null {
     if (typeof Arg !== 'object' || Arg === null) return null
 
     const Visited = new Set<object>()
@@ -45,6 +50,54 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
 
     return null
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  function PowerLinkRenderFromArg(Arg: unknown): Function | null {
+    if (typeof Arg !== 'object' || Arg === null) return null
+
+    const Visited = new Set<object>()
+    let Current: unknown = (Arg as Record<string, unknown>)['_']
+
+    while (typeof Current === 'object' && Current !== null) {
+      if (Visited.has(Current)) break
+      Visited.add(Current)
+
+      const Render = (Current as Record<string, unknown>)['render']
+      if (typeof Render === 'function') return Render
+
+      Current = (Current as Record<string, unknown>)['parent']
+    }
+
+    return null
+  }
+  function PowerLinkElementFromArgParent(Arg: unknown): HTMLElement | null {
+    if (typeof Arg !== 'object' || Arg === null) return null
+
+    const Visited = new Set<object>()
+    let Current = (Arg as Record<string, unknown>)['_']
+
+    while (typeof Current === 'object' && Current !== null) {
+      if (Visited.has(Current)) break
+      Visited.add(Current)
+
+      const Parent = (Current as Record<string, unknown>)['parent']
+      if (typeof Parent === 'object' && Parent !== null) {
+        const ParentVNode = (Parent as Record<string, unknown>)['vnode']
+        if (typeof ParentVNode === 'object' && ParentVNode !== null) {
+          const ParentElement = (ParentVNode as Record<string, unknown>)['el']
+          if (ParentElement instanceof HTMLElement) return ParentElement
+        }
+      }
+
+      const VNode = (Current as Record<string, unknown>)['vnode']
+      if (typeof VNode === 'object' && VNode !== null) {
+        const Element = (VNode as Record<string, unknown>)['el']
+        if (Element instanceof HTMLElement) return Element
+      }
+      Current = Parent
+    }
+    return null
+  }
+
   const MinRatio = 0.35
   const MaxRatio = 0.75
   const EpsilonRatio = 0.04
@@ -62,7 +115,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
 
       const Stringified = String(ThisArg)
       if (Stringified.length < 500 && PL2MajorFuncCallPatterns.filter(Patterns => Patterns.filter(Pattern => Pattern.test(Stringified)).length === Patterns.length).length === 1) {
-        let PL2Element: HTMLElement | null = GetPowerLinkElementFromArg(Args[6])
+        let PL2Element: HTMLElement | null = PowerLinkElementFromArgParent(Args[6])
         if (PL2Element !== null && [...PL2Element.querySelectorAll('*')].filter(Child => {
           if (!(Child instanceof HTMLElement)) return false
           let PL2TitleHeight = Child.getClientRects()[0]?.height ?? 0
@@ -80,6 +133,30 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         console.debug(`[${UserscriptName}]: Matched Function.prototype.call called, but not for PowerLink Skeleton:`, ThisArg)
       }
       InHook = false
+      return OriginalReflectApply(Target, ThisArg, Args)
+    }
+  })
+
+  BrowserWindow.Object.defineProperty = new Proxy(OriginalObjectDefineProperty, {
+    apply(Target: typeof Object.defineProperty, ThisArg: undefined, Args: Parameters<typeof Object.defineProperty>) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+      let VuejsRenderer: Function | null = PowerLinkRenderFromArg(Args[0])
+      let PL2Element: HTMLElement | null = PowerLinkElementFromArgParent(Args[0])
+      let Stringified = String(VuejsRenderer ?? '')
+      if (VuejsRenderer !== null && PL2Element !== null && Stringified.length < 500 &&
+        PL2MajorFuncCallPatterns.filter(Patterns => Patterns.filter(Pattern => Pattern.test(Stringified)).length === Patterns.length).length === 1 &&
+        [...PL2Element.querySelectorAll('*')].filter(Child => {
+          if (!(Child instanceof HTMLElement)) return false
+          let PL2TitleHeight = Child.getClientRects()[0]?.height ?? 0
+          let PL2TitleMarginBottom = Math.max(Number(getComputedStyle(Child).getPropertyValue('padding-bottom').replaceAll(/px/g, '')),
+            Number(getComputedStyle(Child).getPropertyValue('margin-bottom').replaceAll(/px/g, '')))
+          return PL2TitleHeight > 0 && PL2TitleMarginBottom >= PL2TitleHeight * (MinRatio - EpsilonRatio) && PL2TitleMarginBottom <= PL2TitleHeight * (MaxRatio + EpsilonRatio)
+        }).length >= 1
+      ) {
+        console.debug(`[${UserscriptName}]: Restoring renderer.call for detected PowerLink skeleton:`, Args[0])
+        VuejsRenderer.call = Function.prototype.call
+        return
+      }
       return OriginalReflectApply(Target, ThisArg, Args)
     }
   })
