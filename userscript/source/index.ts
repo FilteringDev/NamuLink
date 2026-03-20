@@ -144,10 +144,10 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
   BrowserWindow.Object.defineProperty = new Proxy(OriginalObjectDefineProperty, {
     apply(Target: typeof Object.defineProperty, ThisArg: undefined, Args: Parameters<typeof Object.defineProperty>) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-      let VuejsRenderer: Function | null = PowerLinkRenderFromArg(Args[0])
+      let VuejsRender: Function | null = PowerLinkRenderFromArg(Args[0])
       let PL2Element: HTMLElement | null = PowerLinkElementFromArgParent(Args[0])
-      let Stringified = String(VuejsRenderer ?? '')
-      if (VuejsRenderer !== null && PL2Element !== null && Stringified.length < 500 &&
+      let Stringified = String(VuejsRender ?? '')
+      if (VuejsRender !== null && PL2Element !== null && Stringified.length < 500 &&
         PL2MajorFuncCallPatterns.filter(Patterns => Patterns.filter(Pattern => Pattern.test(Stringified)).length === Patterns.length).length === 1 &&
         [...PL2Element.querySelectorAll('*')].filter(Child => {
           if (!(Child instanceof HTMLElement)) return false
@@ -158,7 +158,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         }).length >= 1
       ) {
         console.debug(`[${UserscriptName}]: Restoring renderer.call for detected PowerLink skeleton:`, Args[0])
-        VuejsRenderer.call = Function.prototype.call
+        VuejsRender.call = Function.prototype.call
         return
       }
       return OriginalReflectApply(Target, ThisArg, Args)
@@ -213,10 +213,10 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
   BrowserWindow.Proxy = new Proxy(OriginalProxy, {
     construct(Target: typeof Proxy, Args: ConstructorParameters<typeof Proxy>) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-      let VuejsRenderer: Function | null = PowerLinkRenderFromArg(Args[0])
+      let VuejsRender: Function | null = PowerLinkRenderFromArg(Args[0])
       let PL2Element: HTMLElement | null = PowerLinkElementFromArgParent(Args[0])
-      let Stringified = String(VuejsRenderer ?? '')
-      if (VuejsRenderer !== null && PL2Element !== null && Stringified.length < 500 &&
+      let Stringified = String(VuejsRender ?? '')
+      if (VuejsRender !== null && PL2Element !== null && Stringified.length < 500 &&
         PL2MajorFuncCallPatterns.filter(Patterns => Patterns.filter(Pattern => Pattern.test(Stringified)).length === Patterns.length).length === 1 &&
         [...PL2Element.querySelectorAll('*')].filter(Child => {
           if (!(Child instanceof HTMLElement)) return false
