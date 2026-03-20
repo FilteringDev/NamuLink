@@ -18,6 +18,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
   const OriginalFunctionPrototypeCall = BrowserWindow.Function.prototype.call
   const OriginalReflectApply = BrowserWindow.Reflect.apply
   const OriginalObjectDefineProperty = BrowserWindow.Object.defineProperty
+  const OriginalProxy = BrowserWindow.Proxy
 
   const PL2MajorFuncCallPatterns: RegExp[][] = [[
     /function *\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *\) *{ *return *[A-Za-z.-9]+/,
@@ -184,6 +185,55 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     }
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  function PowerLinkOverrideRenderFromArg(Arg: unknown, Override: Function): number {
+    if (typeof Arg !== 'object' || Arg === null) return 1
+
+    const Visited = new Set<object>()
+    let Current: unknown = (Arg as Record<string, unknown>)['_']
+
+    while (typeof Current === 'object' && Current !== null) {
+      if (Visited.has(Current)) return 2
+      Visited.add(Current)
+
+      const RecordCurrent = Current as Record<string, unknown>
+      const Render = RecordCurrent['render']
+
+      if (typeof Render === 'function') {
+        RecordCurrent['render'] = Override
+        return 0
+      }
+
+      Current = RecordCurrent['parent']
+    }
+
+    return 3
+  }
+
+  BrowserWindow.Proxy = new Proxy(OriginalProxy, {
+    construct(Target: typeof Proxy, Args: ConstructorParameters<typeof Proxy>) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+      let VuejsRenderer: Function | null = PowerLinkRenderFromArg(Args[0])
+      let PL2Element: HTMLElement | null = PowerLinkElementFromArgParent(Args[0])
+      let Stringified = String(VuejsRenderer ?? '')
+      if (VuejsRenderer !== null && PL2Element !== null && Stringified.length < 500 &&
+        PL2MajorFuncCallPatterns.filter(Patterns => Patterns.filter(Pattern => Pattern.test(Stringified)).length === Patterns.length).length === 1 &&
+        [...PL2Element.querySelectorAll('*')].filter(Child => {
+          if (!(Child instanceof HTMLElement)) return false
+          let PL2TitleHeight = Child.getClientRects()[0]?.height ?? 0
+          let PL2TitleMarginBottom = Math.max(ParseCssFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')),
+            ParseCssFloat(getComputedStyle(Child).getPropertyValue('margin-bottom')))
+          return PL2TitleHeight > 0 && PL2TitleMarginBottom >= PL2TitleHeight * (MinRatio - EpsilonRatio) && PL2TitleMarginBottom <= PL2TitleHeight * (MaxRatio + EpsilonRatio)
+        }).length >= 1
+      ) {
+        console.debug(`[${UserscriptName}]: Prevented declaring render function in Vue.js 3 for detected PowerLink skeleton:`, Args[0], PL2Element)
+        PowerLinkOverrideRenderFromArg(Args[0], () => null)
+        BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderProxy'))
+      }
+      return Reflect.construct(Target, Args)
+    }
+  })
+
   BrowserWindow.document.addEventListener('PL2AdvertContainer', () => {
     setTimeout(() => {
       let ContainerElements = new Set([CommentContainer])
@@ -226,28 +276,51 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         Container.setAttribute('style', 'display: none !important;')
       })
     }, 2500)
+  })
 
-    BrowserWindow.document.addEventListener('PL2PlaceHolder', () => {
-      setTimeout(() => {
-        let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class] div[class] ~ div[class]')])
-        ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement))
-        ContainerElements = new Set([...ContainerElements].filter(Container => {
-          return ParseCssFloat(getComputedStyle(Container).getPropertyValue('padding-top')) > 10 ||
-            ParseCssFloat(getComputedStyle(Container).getPropertyValue('margin-top')) > 10
-        }))
-        ContainerElements = new Set([...ContainerElements, ...[...ContainerElements].flatMap(Container => [...Container.querySelectorAll('*:not(button)')])])
-        ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement && Container.innerText.trim().length === 0))
-        ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-bottom-width')) >= 0.5))
-        ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-left-width')) >= 0.5))
-        ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-right-width')) >= 0.5))
-        ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-top-width')) >= 0.5))
-        ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('transition-duration')) >= 0.01))
-        console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers (PL2PlaceHolder):`, ContainerElements)
-        ContainerElements.forEach(Container => {
-          Container.setAttribute('style', 'display: none !important;')
-        })
-      }, 2500)
-    })
+  BrowserWindow.document.addEventListener('PL2PlaceHolder', () => {
+    setTimeout(() => {
+      let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class] div[class] ~ div[class]')])
+      ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement))
+      ContainerElements = new Set([...ContainerElements].filter(Container => {
+        return ParseCssFloat(getComputedStyle(Container).getPropertyValue('padding-top')) > 10 ||
+          ParseCssFloat(getComputedStyle(Container).getPropertyValue('margin-top')) > 10
+      }))
+      ContainerElements = new Set([...ContainerElements, ...[...ContainerElements].flatMap(Container => [...Container.querySelectorAll('*:not(button)')])])
+      ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement && Container.innerText.trim().length === 0))
+      ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-bottom-width')) >= 0.5))
+      ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-left-width')) >= 0.5))
+      ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-right-width')) >= 0.5))
+      ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-top-width')) >= 0.5))
+      ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('transition-duration')) >= 0.01))
+      console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers (PL2PlaceHolder):`, ContainerElements)
+      ContainerElements.forEach(Container => {
+        Container.setAttribute('style', 'display: none !important;')
+      })
+    }, 2500)
+  })
+
+  BrowserWindow.document.addEventListener('PL2PlaceHolderProxy', () => {
+    setTimeout(() => {
+      let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class] div[class] ~ div[class]')])
+      ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement))
+      ContainerElements = new Set([...ContainerElements].filter(Container => {
+        return ParseCssFloat(getComputedStyle(Container).getPropertyValue('padding-top')) >= 5 &&
+          ParseCssFloat(getComputedStyle(Container).getPropertyValue('padding-bottom')) >= 5 &&
+          ParseCssFloat(getComputedStyle(Container).getPropertyValue('padding-left')) >= 5 &&
+          ParseCssFloat(getComputedStyle(Container).getPropertyValue('padding-right')) >= 5 &&
+          ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-top-width')) >= 0.35 &&
+          ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-bottom-width')) >= 0.35 &&
+          ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-left-width')) >= 0.35 &&
+          ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-right-width')) >= 0.35 &&
+          Container.getClientRects()[0]?.height <= 20 && Container.getClientRects()[0]?.height > 0
+      }))
+      ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement && Container.innerText.trim().length === 0))
+      console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers (PL2PlaceHolderProxy):`, ContainerElements)
+      ContainerElements.forEach(Container => {
+        Container.setAttribute('style', 'display: none !important;')
+      })
+    }, 2500)
   })
 }
 
