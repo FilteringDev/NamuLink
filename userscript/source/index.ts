@@ -102,6 +102,9 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
   const MaxRatio = 0.75
   const EpsilonRatio = 0.04
 
+  function ParseCssFloat(Value: string): number {
+    return Number.parseFloat(Value) || 0
+  }
 
   let CommentContainer: Element = null
   let InHook = false
@@ -119,8 +122,8 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         if (PL2Element !== null && [...PL2Element.querySelectorAll('*')].filter(Child => {
           if (!(Child instanceof HTMLElement)) return false
           let PL2TitleHeight = Child.getClientRects()[0]?.height ?? 0
-          let PL2TitleMarginBottom = Math.max(Number(getComputedStyle(Child).getPropertyValue('padding-bottom').replaceAll(/px/g, '')),
-            Number(getComputedStyle(Child).getPropertyValue('margin-bottom').replaceAll(/px/g, '')))
+          let PL2TitleMarginBottom = Math.max(ParseCssFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')),
+            ParseCssFloat(getComputedStyle(Child).getPropertyValue('margin-bottom')))
           return PL2TitleHeight > 0 && PL2TitleMarginBottom >= PL2TitleHeight * (MinRatio - EpsilonRatio) && PL2TitleMarginBottom <= PL2TitleHeight * (MaxRatio + EpsilonRatio)
         }).length >= 1) {
           console.debug(`[${UserscriptName}]: Function.prototype.call called for PowerLink Skeleton:`, ThisArg)
@@ -148,8 +151,8 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         [...PL2Element.querySelectorAll('*')].filter(Child => {
           if (!(Child instanceof HTMLElement)) return false
           let PL2TitleHeight = Child.getClientRects()[0]?.height ?? 0
-          let PL2TitleMarginBottom = Math.max(Number(getComputedStyle(Child).getPropertyValue('padding-bottom').replaceAll(/px/g, '')),
-            Number(getComputedStyle(Child).getPropertyValue('margin-bottom').replaceAll(/px/g, '')))
+          let PL2TitleMarginBottom = Math.max(ParseCssFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')),
+            ParseCssFloat(getComputedStyle(Child).getPropertyValue('margin-bottom')))
           return PL2TitleHeight > 0 && PL2TitleMarginBottom >= PL2TitleHeight * (MinRatio - EpsilonRatio) && PL2TitleMarginBottom <= PL2TitleHeight * (MaxRatio + EpsilonRatio)
         }).length >= 1
       ) {
@@ -185,14 +188,14 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     setTimeout(() => {
       let ContainerElements = new Set([CommentContainer])
       ContainerElements = new Set([...ContainerElements, ...[...ContainerElements].flatMap(Container => [...Container.querySelectorAll('*')])])
-      ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-bottom-width').replaceAll(/px/g, '')) >= 0.5))
-      ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-left-width').replaceAll(/px/g, '')) >= 0.5))
-      ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-right-width').replaceAll(/px/g, '')) >= 0.5))
-      ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-top-width').replaceAll(/px/g, '')) >= 0.5))
+      ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-bottom-width')) >= 0.5))
+      ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-left-width')) >= 0.5))
+      ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-right-width')) >= 0.5))
+      ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-top-width')) >= 0.5))
       ContainerElements = new Set([...ContainerElements].filter(Container => [...Container.querySelectorAll('*')].some(Child => {
         if (!(Child instanceof HTMLElement)) return false
         let PL2TitleHeight = Child.getClientRects()[0]?.height ?? 0
-        let PL2TitleMarginBottom = Number(getComputedStyle(Child).getPropertyValue('margin-bottom').replaceAll(/px/g, ''))
+        let PL2TitleMarginBottom = ParseCssFloat(getComputedStyle(Child).getPropertyValue('margin-bottom'))
         if (PL2TitleHeight === 0) return false
         return PL2TitleMarginBottom >= PL2TitleHeight * 0.65 && PL2TitleMarginBottom <= PL2TitleHeight * 1.25
       })))
@@ -208,15 +211,15 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
       let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class] div[class] ~ div[class]')])
       ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement))
       ContainerElements = new Set([...ContainerElements].filter(Container =>
-        Number(getComputedStyle(Container).getPropertyValue('margin-bottom').replaceAll(/px$/g, '')) > 15 ||
-        Number(getComputedStyle(Container).getPropertyValue('padding-top').replaceAll(/px$/g, '')) > 20
+        ParseCssFloat(getComputedStyle(Container).getPropertyValue('margin-bottom')) > 15 ||
+        ParseCssFloat(getComputedStyle(Container).getPropertyValue('padding-top')) > 20
       ))
       ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement && Container.innerText.trim().length === 0))
       ContainerElements = new Set([...ContainerElements].filter(Container => [...Container.querySelectorAll('*')].some(Child => Child instanceof HTMLElement &&
-        (Number(getComputedStyle(Child).getPropertyValue('padding-top').replaceAll(/px/g, '')) >= 5 &&
-        Number(getComputedStyle(Child).getPropertyValue('padding-bottom').replaceAll(/px/g, '')) >= 5 &&
-        Number(getComputedStyle(Child).getPropertyValue('padding-left').replaceAll(/px/g, '')) >= 5 &&
-        Number(getComputedStyle(Child).getPropertyValue('padding-right').replaceAll(/px/g, '')) >= 5)
+        (ParseCssFloat(getComputedStyle(Child).getPropertyValue('padding-top')) >= 5 &&
+        ParseCssFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')) >= 5 &&
+        ParseCssFloat(getComputedStyle(Child).getPropertyValue('padding-left')) >= 5 &&
+        ParseCssFloat(getComputedStyle(Child).getPropertyValue('padding-right')) >= 5)
       )))
       console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers (PL2PlaceHolderMobile):`, ContainerElements)
       ContainerElements.forEach(Container => {
@@ -229,16 +232,16 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         let ContainerElements = new Set([...BrowserWindow.document.querySelectorAll('div[class] div[class] div[class] ~ div[class]')])
         ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement))
         ContainerElements = new Set([...ContainerElements].filter(Container => {
-          return Number(getComputedStyle(Container).getPropertyValue('padding-top').replaceAll(/px$/g, '')) > 10 ||
-            Number(getComputedStyle(Container).getPropertyValue('margin-top').replaceAll(/px$/g, '')) > 10
+          return ParseCssFloat(getComputedStyle(Container).getPropertyValue('padding-top')) > 10 ||
+            ParseCssFloat(getComputedStyle(Container).getPropertyValue('margin-top')) > 10
         }))
         ContainerElements = new Set([...ContainerElements, ...[...ContainerElements].flatMap(Container => [...Container.querySelectorAll('*:not(button)')])])
         ContainerElements = new Set([...ContainerElements].filter(Container => Container instanceof HTMLElement && Container.innerText.trim().length === 0))
-        ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-bottom-width').replaceAll(/px/g, '')) >= 0.5))
-        ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-left-width').replaceAll(/px/g, '')) >= 0.5))
-        ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-right-width').replaceAll(/px/g, '')) >= 0.5))
-        ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('border-top-width').replaceAll(/px/g, '')) >= 0.5))
-        ContainerElements = new Set([...ContainerElements].filter(Container => Number(getComputedStyle(Container).getPropertyValue('transition-duration').replaceAll(/s$/g, '')) >= 0.01))
+        ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-bottom-width')) >= 0.5))
+        ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-left-width')) >= 0.5))
+        ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-right-width')) >= 0.5))
+        ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('border-top-width')) >= 0.5))
+        ContainerElements = new Set([...ContainerElements].filter(Container => ParseCssFloat(getComputedStyle(Container).getPropertyValue('transition-duration')) >= 0.01))
         console.debug(`[${UserscriptName}]: Removing PowerLink Skeleton Containers (PL2PlaceHolder):`, ContainerElements)
         ContainerElements.forEach(Container => {
           Container.setAttribute('style', 'display: none !important;')
