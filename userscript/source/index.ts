@@ -19,6 +19,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
   const OriginalReflectApply = BrowserWindow.Reflect.apply
   const OriginalObjectDefineProperty = BrowserWindow.Object.defineProperty
   const OriginalProxy = BrowserWindow.Proxy
+  const OriginalObjectGetOwnPropertyDescriptor = BrowserWindow.Object.getOwnPropertyDescriptor
 
   const PL2MajorFuncCallPatterns: RegExp[][] = [[
     /function *\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *\) *{ *return *[A-Za-z.-9]+/,
@@ -32,6 +33,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
 
   function PowerLinkElementFromArg(Arg: unknown): HTMLElement | null {
     if (typeof Arg !== 'object' || Arg === null) return null
+    if (typeof OriginalReflectApply(OriginalObjectGetOwnPropertyDescriptor, BrowserWindow.Object, [Arg, '_'])?.get === 'function') return null
 
     const Visited = new Set<object>()
     let Current = (Arg as Record<string, unknown>)['_']
@@ -54,6 +56,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   function PowerLinkRenderFromArg(Arg: unknown): Function | null {
     if (typeof Arg !== 'object' || Arg === null) return null
+    if (typeof OriginalReflectApply(OriginalObjectGetOwnPropertyDescriptor, BrowserWindow.Object, [Arg, '_'])?.get === 'function') return null
 
     const Visited = new Set<object>()
     let Current: unknown = (Arg as Record<string, unknown>)['_']
@@ -72,6 +75,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
   }
   function PowerLinkElementFromArgParent(Arg: unknown): HTMLElement | null {
     if (typeof Arg !== 'object' || Arg === null) return null
+    if (typeof OriginalReflectApply(OriginalObjectGetOwnPropertyDescriptor, BrowserWindow.Object, [Arg, '_'])?.get === 'function') return null
 
     const Visited = new Set<object>()
     let Current = (Arg as Record<string, unknown>)['_']
@@ -188,6 +192,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   function PowerLinkOverrideRenderFromArg(Arg: unknown, Override: Function): number {
     if (typeof Arg !== 'object' || Arg === null) return 1
+    if (typeof OriginalReflectApply(OriginalObjectGetOwnPropertyDescriptor, BrowserWindow.Object, [Arg, '_'])?.get === 'function') return null
 
     const Visited = new Set<object>()
     let Current: unknown = (Arg as Record<string, unknown>)['_']
@@ -213,6 +218,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   function PowerLinkVnodeTypeRenderFromArg(Arg: unknown): Function | null {
     if (typeof Arg !== 'object' || Arg === null) return null
+    if (typeof OriginalReflectApply(OriginalObjectGetOwnPropertyDescriptor, BrowserWindow.Object, [Arg, '_'])?.get === 'function') return null
 
     const Visited = new Set<object>()
     let Current: unknown = (Arg as Record<string, unknown>)['_']
@@ -243,6 +249,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   function PowerLinkOverrideVnodeTypeRenderOnlyFromArg(Arg: unknown, Override: Function): number {
     if (typeof Arg !== 'object' || Arg === null) return 1
+    if (typeof OriginalReflectApply(OriginalObjectGetOwnPropertyDescriptor, BrowserWindow.Object, [Arg, '_'])?.get === 'function') return null
 
     const Visited = new Set<object>()
     let Current: unknown = (Arg as Record<string, unknown>)['_']
