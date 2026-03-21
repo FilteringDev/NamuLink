@@ -210,10 +210,77 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     return 3
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  function PowerLinkVnodeTypeRenderFromArg(Arg: unknown): Function | null {
+    if (typeof Arg !== 'object' || Arg === null) return null
+
+    const Visited = new Set<object>()
+    let Current: unknown = (Arg as Record<string, unknown>)['_']
+
+    while (typeof Current === 'object' && Current !== null) {
+      if (Visited.has(Current)) break
+      Visited.add(Current)
+
+      const CurrentRecord = Current as Record<string, unknown>
+      const Render = CurrentRecord['render']
+      if (typeof Render === 'function') return Render
+
+      const VNode = CurrentRecord['vnode']
+      if (typeof VNode === 'object' && VNode !== null) {
+        const Type = (VNode as Record<string, unknown>)['type']
+        if (typeof Type === 'object' && Type !== null) {
+          const TypeRender = (Type as Record<string, unknown>)['render']
+          if (typeof TypeRender === 'function') return TypeRender
+        }
+      }
+
+      Current = CurrentRecord['parent']
+    }
+
+    return null
+  }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  function PowerLinkOverrideVnodeTypeRenderOnlyFromArg(Arg: unknown, Override: Function): number {
+    if (typeof Arg !== 'object' || Arg === null) return 1
+
+    const Visited = new Set<object>()
+    let Current: unknown = (Arg as Record<string, unknown>)['_']
+
+    while (typeof Current === 'object' && Current !== null) {
+      if (Visited.has(Current)) return 2
+      Visited.add(Current)
+
+      const CurrentRecord = Current as Record<string, unknown>
+      const VNode = CurrentRecord['vnode']
+
+      if (typeof VNode === 'object' && VNode !== null) {
+        const Type = (VNode as Record<string, unknown>)['type']
+
+        if (typeof Type === 'object' && Type !== null) {
+          const TypeRender = (Type as Record<string, unknown>)['render']
+
+          if (typeof TypeRender === 'function') {
+            (Type as Record<string, unknown>)['render'] = Override
+            return 0
+          }
+        }
+      }
+
+      Current = CurrentRecord['parent']
+    }
+
+    return 3
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  let VuejsPL2Render: Set<Function> = new Set()
   BrowserWindow.Proxy = new Proxy(OriginalProxy, {
     construct(Target: typeof Proxy, Args: ConstructorParameters<typeof Proxy>) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
       let VuejsRender: Function | null = PowerLinkRenderFromArg(Args[0])
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+      let VuejsCtxSubtreeRender: Function | null = PowerLinkVnodeTypeRenderFromArg(Args[0])
       let PL2Element: HTMLElement | null = PowerLinkElementFromArgParent(Args[0])
       let Stringified = String(VuejsRender ?? '')
       if (VuejsRender !== null && PL2Element !== null && Stringified.length < 500 &&
@@ -227,8 +294,14 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         }).length >= 1
       ) {
         console.debug(`[${UserscriptName}]: Prevented declaring render function in Vue.js 3 for detected PowerLink skeleton:`, Args[0], PL2Element)
+        VuejsPL2Render.add(VuejsRender)
         PowerLinkOverrideRenderFromArg(Args[0], () => null)
         BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderProxy'))
+      } else if (VuejsCtxSubtreeRender !== null && VuejsPL2Render.has(VuejsCtxSubtreeRender)) {
+        console.debug(`[${UserscriptName}]: Prevented declaring render function in Vue.js 3 in SPA moving for detected PowerLink skeleton:`, Args[0])
+        PowerLinkOverrideVnodeTypeRenderOnlyFromArg(Args[0], () => null)
+        BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderProxy'))
+        return Reflect.construct(Target, Args)
       }
       return Reflect.construct(Target, Args)
     }
