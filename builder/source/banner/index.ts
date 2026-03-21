@@ -40,7 +40,6 @@ export function CreateBanner(Options: BannerOptions): string {
 
   for (const Domain of Options.Domains) {
     BannerString += `// @match      *://${Domain}/*\n`
-    BannerString += `// @match      *://*.${Domain}/*\n`
   }
   BannerString += '// ==/UserScript==\n\n'
   return BannerString
