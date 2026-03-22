@@ -280,6 +280,62 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     return 3
   }
 
+  function ProxySetHandlerNewValueCheck(NewValue: Parameters<ProxyHandler<object>['set']>[2]): boolean {
+    let Stringified: string = String(NewValue)
+    return Stringified.includes('https://ader.naver.com/')
+  }
+
+  function ProxySetHandlerTargetCheck(Target: object): boolean {
+    for (const PropertyName of Object.keys(Target)) {
+      const Value = (Target as Record<string, unknown>)[PropertyName]
+      const Descriptor = OriginalObjectGetOwnPropertyDescriptor(Target, PropertyName)
+
+      if (
+        typeof Value === 'object' &&
+        Value !== null &&
+        typeof Descriptor?.get !== 'function'
+      ) {
+        if (ProxySetHandlerTargetCheck(Value)) {
+          return true
+        }
+      } else if (
+        typeof Value === 'string' &&
+        Value.includes('ader.naver.com')
+      ) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  function ProxySetHandlerTargetCheckAndReplace(Target: object, NewValue: string): boolean {
+    const Record = Target as Record<string, unknown>
+
+    for (const PropertyName of Object.keys(Record)) {
+      const Value = Record[PropertyName]
+      const Descriptor = OriginalObjectGetOwnPropertyDescriptor(Target, PropertyName)
+
+      if (
+        typeof Value === 'object' &&
+        Value !== null &&
+        typeof Descriptor?.get !== 'function'
+      ) {
+        if (ProxySetHandlerTargetCheckAndReplace(Value, NewValue)) {
+          return true
+        }
+      } else if (
+        typeof Value === 'string' &&
+        Value.includes('ader.naver.com')
+      ) {
+        Record[PropertyName] = NewValue
+        return true
+      }
+    }
+
+    return false
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   let VuejsPL2Render: Set<Function> = new Set()
   BrowserWindow.Proxy = new Proxy(OriginalProxy, {
@@ -309,6 +365,25 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         PowerLinkOverrideVnodeTypeRenderOnlyFromArg(Args[0], () => null)
         BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderProxy'))
         return Reflect.construct(Target, Args)
+      }
+      if (typeof Args[1].set === 'function') {
+        const OriginalSet = Args[1].set
+        Args[1].set = function(...SetArgs: Parameters<typeof OriginalSet>) {
+          if (ProxySetHandlerNewValueCheck(SetArgs[2])) {
+            console.debug(`[${UserscriptName}]: Proxy set called for PowerLink Skeleton:`, SetArgs)
+            return
+          }
+          if (ProxySetHandlerTargetCheck(SetArgs[0]) &&
+            Object.keys(SetArgs[0]).some(PropertyName => typeof SetArgs[0][PropertyName] !== 'undefined' && SetArgs[0][PropertyName] instanceof AbortController)) {
+            console.debug(`[${UserscriptName}]: Proxy set called for PowerLink Skeleton (target check):`, SetArgs)
+            BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderProxy'))
+            return
+          }
+          else if (ProxySetHandlerTargetCheckAndReplace(SetArgs[0], '')) {
+            console.debug(`[${UserscriptName}]: Proxy set called for PowerLink Skeleton (target check and replace):`, SetArgs)
+          }
+          return OriginalReflectApply(OriginalSet, this, SetArgs)
+        }
       }
       return Reflect.construct(Target, Args)
     }
