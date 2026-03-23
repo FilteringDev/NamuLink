@@ -293,6 +293,9 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     }, {
       Key: 'StartWith',
       String: '!/jump/'
+    }, {
+      Key: 'StartWith',
+      String: '//i.namu.wiki/i/'
     }]
     return HotkeyArray.some(Hotkey => {
       switch (Hotkey.Key) {
@@ -350,9 +353,11 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
 
     if (Array.isArray(Schema)) {
       if (!Array.isArray(Target)) return false
-      if (Schema.length === 0) return true
+      if (Schema.length !== Target.length) return false
 
-      return Target.every(Item => MatchesShape(Schema[0], Item))
+      return Schema.every((SchemaItem, Index) =>
+        MatchesShape(SchemaItem, Target[Index])
+      )
     }
 
     if (typeof Schema === 'object') {
@@ -423,26 +428,22 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
           }
           if (ProxySetHandlerTargetCheck(SetArgs[0]) && MatchesShape({
             Dummy: [],
-            PowerLinkTracking: [
-              {
-                Url: '',
-                UrlObj: {
-                  Url: ''
-                }
-              }
-            ],
+            Dummy2: [],
             LayoutFormat: '',
             NumberKey: [0, 0, 0],
             PowerLinkText: [
               {
                 Url: '',
                 Title: '',
-                No: 0
+                No: 0,
+                VSkip: true
               }
             ]
           }, SetArgs[0])) {
             console.debug(`[${UserscriptName}]: Proxy set called for PowerLink Skeleton (target check):`, SetArgs)
             BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderProxy'))
+            BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderMobile'))
+            BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolder'))
             return
           }
           return OriginalReflectApply(OriginalSet, this, SetArgs)
