@@ -336,6 +336,47 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     return false
   }
 
+  function MatchesShape(Schema: unknown, Target: unknown): boolean {
+    if (Schema === null || Target === null) {
+      return Schema === Target
+    }
+
+    if (Array.isArray(Schema)) {
+      if (!Array.isArray(Target)) return false
+      if (Schema.length === 0) return true
+
+      return Target.every(Item => MatchesShape(Schema[0], Item))
+    }
+
+    if (typeof Schema === 'object') {
+      if (typeof Target !== 'object' || Array.isArray(Target)) return false
+      if (Target === null) return false
+
+      const SchemaValues = Object.values(Schema as Record<string, unknown>)
+      const TargetValues = Object.values(Target as Record<string, unknown>)
+
+      const Used = new Array(TargetValues.length).fill(false)
+
+      for (const SchemaValue of SchemaValues) {
+        let Found = false
+
+        for (let I = 0; I < TargetValues.length; I++) {
+          if (!Used[I] && MatchesShape(SchemaValue, TargetValues[I])) {
+            Used[I] = true
+            Found = true
+            break
+          }
+        }
+
+        if (!Found) return false
+      }
+
+      return true
+    }
+
+    return typeof Schema === typeof Target
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   let VuejsPL2Render: Set<Function> = new Set()
   BrowserWindow.Proxy = new Proxy(OriginalProxy, {
@@ -373,8 +414,26 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
             console.debug(`[${UserscriptName}]: Proxy set called for PowerLink Skeleton:`, SetArgs)
             return
           }
-          if (ProxySetHandlerTargetCheck(SetArgs[0]) &&
-            Object.keys(SetArgs[0]).some(PropertyName => typeof SetArgs[0][PropertyName] !== 'undefined' && SetArgs[0][PropertyName] instanceof AbortController)) {
+          if (ProxySetHandlerTargetCheck(SetArgs[0]) && MatchesShape({
+            Dummy: [],
+            PowerLinkTracking: [
+              {
+                Url: '',
+                UrlObj: {
+                  Url: ''
+                }
+              }
+            ],
+            LayoutFormat: '',
+            NumberKey: [0, 0, 0],
+            PowerLinkText: [
+              {
+                Url: '',
+                Title: '',
+                No: 0
+              }
+            ]
+          }, SetArgs[0])) {
             console.debug(`[${UserscriptName}]: Proxy set called for PowerLink Skeleton (target check):`, SetArgs)
             BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderProxy'))
             return
