@@ -414,7 +414,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
             console.debug(`[${UserscriptName}]: Proxy set called for PowerLink Skeleton:`, SetArgs)
             return
           }
-          if (ProxySetHandlerTargetCheck(SetArgs[0]) && MatchesShape({
+          if (MatchesShape({
             Dummy: [],
             PowerLinkTracking: [
               {
@@ -433,7 +433,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
                 No: 0
               }
             ]
-          }, SetArgs[0])) {
+          }, SetArgs[0]) && ProxySetHandlerTargetCheck(SetArgs[0])) {
             console.debug(`[${UserscriptName}]: Proxy set called for PowerLink Skeleton (target check):`, SetArgs)
             BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderProxy'))
             return
