@@ -285,7 +285,15 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     return Stringified.includes('https://ader.naver.com/')
   }
 
-  function ProxySetHandlerTargetCheck(Target: object): boolean {
+  function ProxySetHandlerTargetCheck(
+    Target: object,
+    Visited = new WeakSet<object>()
+  ): boolean {
+    if (Visited.has(Target)) {
+      return false
+    }
+    Visited.add(Target)
+
     for (const PropertyName of Object.keys(Target)) {
       const Value = (Target as Record<string, unknown>)[PropertyName]
       const Descriptor = OriginalObjectGetOwnPropertyDescriptor(Target, PropertyName)
@@ -295,40 +303,13 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         Value !== null &&
         typeof Descriptor?.get !== 'function'
       ) {
-        if (ProxySetHandlerTargetCheck(Value)) {
+        if (ProxySetHandlerTargetCheck(Value, Visited)) {
           return true
         }
       } else if (
         typeof Value === 'string' &&
         Value.includes('ader.naver.com')
       ) {
-        return true
-      }
-    }
-
-    return false
-  }
-
-  function ProxySetHandlerTargetCheckAndReplace(Target: object, NewValue: string): boolean {
-    const Record = Target as Record<string, unknown>
-
-    for (const PropertyName of Object.keys(Record)) {
-      const Value = Record[PropertyName]
-      const Descriptor = OriginalObjectGetOwnPropertyDescriptor(Target, PropertyName)
-
-      if (
-        typeof Value === 'object' &&
-        Value !== null &&
-        typeof Descriptor?.get !== 'function'
-      ) {
-        if (ProxySetHandlerTargetCheckAndReplace(Value, NewValue)) {
-          return true
-        }
-      } else if (
-        typeof Value === 'string' &&
-        Value.includes('ader.naver.com')
-      ) {
-        Record[PropertyName] = NewValue
         return true
       }
     }
@@ -437,9 +418,6 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
             console.debug(`[${UserscriptName}]: Proxy set called for PowerLink Skeleton (target check):`, SetArgs)
             BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderProxy'))
             return
-          }
-          else if (ProxySetHandlerTargetCheckAndReplace(SetArgs[0], '')) {
-            console.debug(`[${UserscriptName}]: Proxy set called for PowerLink Skeleton (target check and replace):`, SetArgs)
           }
           return OriginalReflectApply(OriginalSet, this, SetArgs)
         }
