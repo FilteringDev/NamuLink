@@ -285,7 +285,15 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     return Stringified.includes('https://ader.naver.com/')
   }
 
-  function ProxySetHandlerTargetCheck(Target: object): boolean {
+  function ProxySetHandlerTargetCheck(
+    Target: object,
+    Visited = new WeakSet<object>()
+  ): boolean {
+    if (Visited.has(Target)) {
+      return false
+    }
+    Visited.add(Target)
+
     for (const PropertyName of Object.keys(Target)) {
       const Value = (Target as Record<string, unknown>)[PropertyName]
       const Descriptor = OriginalObjectGetOwnPropertyDescriptor(Target, PropertyName)
@@ -295,7 +303,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         Value !== null &&
         typeof Descriptor?.get !== 'function'
       ) {
-        if (ProxySetHandlerTargetCheck(Value)) {
+        if (ProxySetHandlerTargetCheck(Value, Visited)) {
           return true
         }
       } else if (
