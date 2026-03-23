@@ -280,9 +280,35 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     return 3
   }
 
+  function MatchPL2TrackingString(Value: string): boolean {
+    const HotkeyArray: {
+      Key: 'StartWith' | 'Includes' | 'EndsWith',
+      String: string
+    }[] = [{
+      Key: 'Includes',
+      String: '//ader.naver.com/'
+    }, {
+      Key: 'Includes',
+      String: '//ader.naver.com/'
+    }, {
+      Key: 'StartWith',
+      String: '!/jump/'
+    }]
+    return HotkeyArray.some(Hotkey => {
+      switch (Hotkey.Key) {
+        case 'StartWith':
+          return Value.startsWith(Hotkey.String)
+        case 'Includes':
+          return Value.includes(Hotkey.String)
+        case 'EndsWith':
+          return Value.endsWith(Hotkey.String)
+      }
+    })
+  }
+
   function ProxySetHandlerNewValueCheck(NewValue: Parameters<ProxyHandler<object>['set']>[2]): boolean {
     let Stringified: string = String(NewValue)
-    return Stringified.includes('https://ader.naver.com/')
+    return MatchPL2TrackingString(Stringified)
   }
 
   function ProxySetHandlerTargetCheck(
@@ -308,7 +334,7 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
         }
       } else if (
         typeof Value === 'string' &&
-        Value.includes('ader.naver.com')
+        MatchPL2TrackingString(Value)
       ) {
         return true
       }
