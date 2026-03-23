@@ -309,33 +309,6 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
     return false
   }
 
-  function ProxySetHandlerTargetCheckAndReplace(Target: object, NewValue: string): boolean {
-    const Record = Target as Record<string, unknown>
-
-    for (const PropertyName of Object.keys(Record)) {
-      const Value = Record[PropertyName]
-      const Descriptor = OriginalObjectGetOwnPropertyDescriptor(Target, PropertyName)
-
-      if (
-        typeof Value === 'object' &&
-        Value !== null &&
-        typeof Descriptor?.get !== 'function'
-      ) {
-        if (ProxySetHandlerTargetCheckAndReplace(Value, NewValue)) {
-          return true
-        }
-      } else if (
-        typeof Value === 'string' &&
-        Value.includes('ader.naver.com')
-      ) {
-        Record[PropertyName] = NewValue
-        return true
-      }
-    }
-
-    return false
-  }
-
   function MatchesShape(Schema: unknown, Target: unknown): boolean {
     if (Schema === null || Target === null) {
       return Schema === Target
@@ -437,9 +410,6 @@ export function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptNa
             console.debug(`[${UserscriptName}]: Proxy set called for PowerLink Skeleton (target check):`, SetArgs)
             BrowserWindow.document.dispatchEvent(new CustomEvent('PL2PlaceHolderProxy'))
             return
-          }
-          else if (ProxySetHandlerTargetCheckAndReplace(SetArgs[0], '')) {
-            console.debug(`[${UserscriptName}]: Proxy set called for PowerLink Skeleton (target check and replace):`, SetArgs)
           }
           return OriginalReflectApply(OriginalSet, this, SetArgs)
         }
