@@ -157,8 +157,6 @@ export function CreateOcrWorkerClient(BrowserWindow: typeof window, WorkerInstan
 	}
 }
 
-const RasterizedSvgCache = new Map<string, Promise<string>>()
-
 function IsSvgDataUrl(SourceUrl: string): boolean {
 	return /^data:image\/svg\+xml(?:[;,]|$)/i.test(SourceUrl)
 }
