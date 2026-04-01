@@ -26,7 +26,7 @@ export function RunDebugServer(Port: number, FileName: string[], ShouldPreventHT
       Res.writeHead(404)
       Res.end()
       return
-    } else if (!IsLoopBack(Req.socket.remoteAddress)) {
+    } else if (!IsLoopBack(Req.socket.remoteAddress ?? '')) {
       Res.writeHead(403)
       Res.end()
       return

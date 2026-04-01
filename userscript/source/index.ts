@@ -31,7 +31,7 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
 
   const OCRInstance = CreateOcrWorkerClient(BrowserWindow, new Worker(URL.createObjectURL(new Blob([__OCR_WORKER_CODE__], { type: 'application/javascript' }))))
 
-  ArticleHTMLElement.addEventListener('vue:settled', async (EventObject: CustomEvent) => {
+  ArticleHTMLElement.addEventListener('vue:settled', async () => {
     let Targeted = [...document.querySelectorAll('#app div[class] div[class] ~ div[class]')].filter(Ele => Ele instanceof HTMLElement)
     Targeted = Targeted.filter(Ele => parseFloat(getComputedStyle(Ele).getPropertyValue('padding-top')) >= 20 || parseFloat(getComputedStyle(Ele).getPropertyValue('margin-top')) >= 20)
     Targeted = Targeted.filter(Ele => [...Ele.querySelectorAll('*')].filter(Child => 

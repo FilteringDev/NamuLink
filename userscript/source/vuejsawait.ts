@@ -7,7 +7,7 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
     throw new TypeError('TargetEl must be an HTMLElement')
   }
 
-  let Timer = null
+  let Timer: number = -1
   let Seq = 0
   let Destroyed = false
   let LastMutationAt = performance.now()
