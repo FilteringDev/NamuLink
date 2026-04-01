@@ -44,21 +44,6 @@ function Get2DContext(Canvas: OffscreenCanvas): OffscreenCanvasRenderingContext2
 
 const BlobCache = new Map<string, Blob>()
 
-async function LoadBitmapFromUrl(Url: string): Promise<ImageBitmap> {
-  let BlobData = BlobCache.get(Url)
-
-  if (!BlobData) {
-    const Response = await fetch(Url, { mode: 'cors', credentials: 'omit' })
-    if (!Response.ok) {
-      throw new Error(`Failed to fetch image: ${Response.status} ${Response.statusText}`)
-    }
-
-    BlobData = await Response.blob()
-    BlobCache.set(Url, BlobData)
-  }
-
-  return await createImageBitmap(BlobData)
-}
 
 function DrawImageWithBackground(
 	Source: CanvasImageSource,
