@@ -88,6 +88,9 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
     Targeted = [...new Set(Targeted)]
     Targeted = Targeted.filter(Ele => parseFloat(getComputedStyle(Ele).getPropertyValue('padding-left')) >= 5 && parseFloat(getComputedStyle(Ele).getPropertyValue('border-right-width')) >= 0.1)
     console.debug(`[${UserscriptName}] Detected ${Targeted.length} potential ad elements.`, Targeted)
+    Targeted.forEach(Ele => {
+      Ele.style.setProperty('display', 'none', 'important')
+    })
   })
 
   // init Naver Nanum fonts
