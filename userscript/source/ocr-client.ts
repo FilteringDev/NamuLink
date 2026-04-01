@@ -322,18 +322,6 @@ async function RasterizeSvgDataUrlToPngDataUrl(
 	}
 }
 
-async function NormalizeSourceUrlForDetect(
-	BrowserWindow: typeof window,
-	HostElement: HTMLElement,
-	SourceUrl: string,
-): Promise<string> {
-	if (IsSvgDataUrl(SourceUrl)) {
-		return await RasterizeSvgDataUrlToPngDataUrl(BrowserWindow, HostElement, SourceUrl)
-	}
-
-	return SourceUrl
-}
-
 function IsSvgMimeType(MimeType: string | null): boolean {
 	return typeof MimeType === 'string' && /^image\/svg\+xml(?:\s*;|$)/i.test(MimeType)
 }
