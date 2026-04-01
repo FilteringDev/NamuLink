@@ -274,54 +274,6 @@ async function LoadImageElement(BrowserWindow: typeof window, SourceUrl: string)
 	return ImageElement
 }
 
-async function RasterizeSvgDataUrlToPngDataUrl(
-	BrowserWindow: typeof window,
-	HostElement: HTMLElement,
-	SourceUrl: string,
-): Promise<string> {
-	const { Width, Height } = GetSvgRasterSize(BrowserWindow, HostElement)
-	const CacheKey = `${Width}x${Height}__${SourceUrl}`
-
-	const Cached = RasterizedSvgCache.get(CacheKey)
-	if (Cached) return Cached
-
-	const Pending = (async () => {
-		const SvgMarkup = DecodeSvgDataUrl(BrowserWindow, SourceUrl)
-		const PreparedSvgMarkup = PrepareSvgMarkupForRasterize(BrowserWindow, SvgMarkup, Width, Height)
-
-		const SvgBlobUrl = BrowserWindow.URL.createObjectURL(
-			new BrowserWindow.Blob([PreparedSvgMarkup], { type: 'image/svg+xml' })
-		)
-
-		try {
-			const ImageElement = await LoadImageElement(BrowserWindow, SvgBlobUrl)
-
-			const Canvas = BrowserWindow.document.createElement('canvas')
-			Canvas.width = Width
-			Canvas.height = Height
-
-			const Context2D = Canvas.getContext('2d', { willReadFrequently: true })
-			if (!Context2D) throw new Error('2D context unavailable')
-
-			Context2D.clearRect(0, 0, Width, Height)
-			Context2D.drawImage(ImageElement, 0, 0, Width, Height)
-
-			return Canvas.toDataURL('image/png')
-		} finally {
-			BrowserWindow.URL.revokeObjectURL(SvgBlobUrl)
-		}
-	})()
-
-	RasterizedSvgCache.set(CacheKey, Pending)
-
-	try {
-		return await Pending
-	} catch (ErrorValue) {
-		RasterizedSvgCache.delete(CacheKey)
-		throw ErrorValue
-	}
-}
-
 function IsSvgMimeType(MimeType: string | null): boolean {
 	return typeof MimeType === 'string' && /^image\/svg\+xml(?:\s*;|$)/i.test(MimeType)
 }
