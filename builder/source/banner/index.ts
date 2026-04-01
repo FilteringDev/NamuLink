@@ -28,6 +28,7 @@ export function CreateBanner(Options: BannerOptions): string {
   BannerString += `// @author       ${Options.Author}\n`
   BannerString += '//\n'
   BannerString += '// @grant        unsafeWindow\n'
+  BannerString += '// @grant        GM.xmlHttpRequest\n'
   BannerString += '// @run-at       document-start\n'
   BannerString += '//\n'
   BannerString += `// @description  ${Options.Description['en']}\n`

@@ -1,6 +1,7 @@
 import * as ESBuild from 'esbuild'
 import * as Zod from 'zod'
 import * as Process from 'node:process'
+import * as Path from 'node:path'
 import PackageJson from '@npmcli/package-json'
 import { CreateBanner } from './banner/index.js'
 import { SafeInitCwd } from './utils/safe-init-cwd.js'
@@ -44,14 +45,25 @@ export async function Build(OptionsParam?: BuildOptions): Promise<void> {
     }
   })
 
+  const WorkerCode = await ESBuild.build({
+    entryPoints: [Path.resolve(ProjectRoot, 'userscript', 'source', 'ocr-worker.ts')],
+    bundle: true,
+    minify: Options.Minify,
+    write: false,
+    target: ['es2024', 'chrome119', 'firefox142', 'safari26']
+  })
+
   await ESBuild.build({
-    entryPoints: [ProjectRoot + '/userscript/source/index.ts'],
+    entryPoints: [Path.resolve(ProjectRoot, 'userscript', 'source', 'index.ts')],
     bundle: true,
     minify: Options.Minify,
     outfile: `${ProjectRoot}/dist/NamuLink${Options.BuildType === 'development' ? '.dev' : ''}.user.js`,
     banner: {
       js: Banner
     },
-    target: ['es2024', 'chrome119', 'firefox142', 'safari26']
+    target: ['es2024', 'chrome119', 'firefox142', 'safari26'],
+    define: {
+      __OCR_WORKER_CODE__: JSON.stringify(WorkerCode.outputFiles[0].text)
+    }
   })
 }
