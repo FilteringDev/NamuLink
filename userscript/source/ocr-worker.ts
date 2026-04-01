@@ -42,8 +42,6 @@ function Get2DContext(Canvas: OffscreenCanvas): OffscreenCanvasRenderingContext2
 	return Context2D
 }
 
-const BlobCache = new Map<string, Blob>()
-
 
 // function DrawImageWithBackground(
 // 	Source: CanvasImageSource,
