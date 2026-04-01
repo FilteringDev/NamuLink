@@ -186,16 +186,6 @@ function DecodeSvgDataUrl(BrowserWindow: typeof window, SourceUrl: string): stri
 	return decodeURIComponent(Payload)
 }
 
-function GetSvgRasterSize(BrowserWindow: typeof window, HostElement: HTMLElement): { Width: number, Height: number } {
-	const Rect = HostElement.getBoundingClientRect()
-	const RasterScale = Math.max(2, BrowserWindow.devicePixelRatio || 1)
-
-	const Width = Math.max(1, Math.round((Rect.width || HostElement.clientWidth || 96) * RasterScale))
-	const Height = Math.max(1, Math.round((Rect.height || HostElement.clientHeight || 32) * RasterScale))
-
-	return { Width, Height }
-}
-
 function PrepareSvgMarkupForRasterize(
 	BrowserWindow: typeof window,
 	SvgMarkup: string,
