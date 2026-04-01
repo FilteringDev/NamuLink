@@ -90,9 +90,14 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
     })()
     Targeted.forEach(Ele => Targeted.push(...new Set([...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement))))
     Targeted = [...new Set(Targeted)]
-    Targeted = Targeted.filter(Ele => parseFloat(getComputedStyle(Ele).getPropertyValue('padding-left')) >= 5 && parseFloat(getComputedStyle(Ele).getPropertyValue('border-right-width')) >= 0.1)
-    console.debug(`[${UserscriptName}] vue:settled`, Targeted)
-    Targeted.forEach(Ele => {
+    let RealTargeted = Targeted.filter(Ele => parseFloat(getComputedStyle(Ele).getPropertyValue('padding-left')) >= 5 && parseFloat(getComputedStyle(Ele).getPropertyValue('border-right-width')) >= 0.1)
+    console.debug(`[${UserscriptName}] vue:settled RealTargeted`, RealTargeted)
+    RealTargeted.forEach(Ele => {
+      Ele.style.setProperty('display', 'none', 'important')
+    })
+    let FrameTargeted = Targeted.filter(Ele => Ele instanceof HTMLElement && Ele.innerText.trim().length === 0)
+    console.debug(`[${UserscriptName}] vue:settled FrameTargeted`, FrameTargeted)
+    FrameTargeted.forEach(Ele => {
       Ele.style.setProperty('display', 'none', 'important')
     })
   })
