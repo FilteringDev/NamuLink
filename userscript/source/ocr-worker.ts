@@ -45,19 +45,19 @@ function Get2DContext(Canvas: OffscreenCanvas): OffscreenCanvasRenderingContext2
 const BlobCache = new Map<string, Blob>()
 
 
-function DrawImageWithBackground(
-	Source: CanvasImageSource,
-	Width: number,
-	Height: number,
-	BackgroundCssColor: string,
-): OffscreenCanvas {
-	const Canvas = CreateCanvas(Width, Height)
-	const Context2D = Get2DContext(Canvas)
-	Context2D.fillStyle = BackgroundCssColor
-	Context2D.fillRect(0, 0, Width, Height)
-	Context2D.drawImage(Source, 0, 0, Width, Height)
-	return Canvas
-}
+// function DrawImageWithBackground(
+// 	Source: CanvasImageSource,
+// 	Width: number,
+// 	Height: number,
+// 	BackgroundCssColor: string,
+// ): OffscreenCanvas {
+// 	const Canvas = CreateCanvas(Width, Height)
+// 	const Context2D = Get2DContext(Canvas)
+// 	Context2D.fillStyle = BackgroundCssColor
+// 	Context2D.fillRect(0, 0, Width, Height)
+// 	Context2D.drawImage(Source, 0, 0, Width, Height)
+// 	return Canvas
+// }
 
 function CanvasToGrayImage(Canvas: OffscreenCanvas): GrayImage {
 	const Context2D = Get2DContext(Canvas)
