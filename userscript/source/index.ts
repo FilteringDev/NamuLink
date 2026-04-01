@@ -55,7 +55,11 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
 
   ArticleHTMLElement.addEventListener('vue:settled', async () => {
     let Targeted = [...document.querySelectorAll('#app div[class] div[class] ~ div[class]')].filter(Ele => Ele instanceof HTMLElement)
-    Targeted = Targeted.filter(Ele => parseFloat(getComputedStyle(Ele).getPropertyValue('padding-top')) >= 20 || parseFloat(getComputedStyle(Ele).getPropertyValue('margin-top')) >= 20)
+    Targeted = Targeted.filter(Ele =>
+      parseFloat(getComputedStyle(Ele).getPropertyValue('padding-top')) >= 20 ||
+      parseFloat(getComputedStyle(Ele).getPropertyValue('margin-top')) >= 20 ||
+      parseFloat(getComputedStyle(Ele).getPropertyValue('margin-bottom')) >= 12.5
+    )
     Targeted = Targeted.filter(Ele => [...Ele.querySelectorAll('*')].filter(Child => 
       parseFloat(getComputedStyle(Child).getPropertyValue('padding-top')) >= 5 && parseFloat(getComputedStyle(Child).getPropertyValue('border-bottom-width')) >= 0.1
     ).length === 1)
