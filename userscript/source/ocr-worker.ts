@@ -31,7 +31,6 @@ const DefaultFontCandidates = [
 ] as const
 
 const TemplateCache = new Map<string, BinaryImage>()
-const ImageBitmapCache = new Map<string, ImageBitmap>()
 
 function CreateCanvas(Width: number, Height: number): OffscreenCanvas {
 	return new OffscreenCanvas(Math.max(1, Math.floor(Width)), Math.max(1, Math.floor(Height)))
