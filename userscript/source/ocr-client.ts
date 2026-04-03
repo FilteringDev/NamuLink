@@ -339,7 +339,7 @@ async function LoadImageDataFromSourceUrl(
 	}
 
 	const ResponseData = await new Promise<{ BlobData: Blob, ContentTypeHeader: string | null }>((Resolve, Reject) => {
-		GM.xmlHttpRequest({
+		GM.xmlhttpRequest({
 			url: SourceUrl,
 			method: 'GET',
 			responseType: 'blob',
