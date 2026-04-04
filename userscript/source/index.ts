@@ -61,7 +61,8 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
           .filter(Child =>
             Child instanceof HTMLImageElement ||
             getComputedStyle(Child).backgroundImage !== 'none'
-          )
+          ).filter(Child => parseFloat(getComputedStyle(Child).getPropertyValue('width')) >= 5 && parseFloat(getComputedStyle(Child).getPropertyValue('height')) >= 5)
+          .filter(Child => parseFloat(getComputedStyle(Child).getPropertyValue('width')) <= 50 && parseFloat(getComputedStyle(Child).getPropertyValue('height')) <= 50)
         let MatchedCount = 0
         for (const Child of CandidateChildren) {
           const Result = await OCRInstance.DetectFromElement(Child, {
