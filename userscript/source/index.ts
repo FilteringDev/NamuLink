@@ -53,25 +53,16 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
 
   const OCRInstance = CreateOcrWorkerClient(BrowserWindow, new Worker(URL.createObjectURL(new Blob([__OCR_WORKER_CODE__], { type: 'application/javascript' }))))
 
-  ArticleHTMLElement.addEventListener('vue:settled', async () => {
-    let Targeted = [...document.querySelectorAll('#app div[class] div[class] ~ div[class]')].filter(Ele => Ele instanceof HTMLElement)
-    Targeted = Targeted.filter(Ele =>
-      parseFloat(getComputedStyle(Ele).getPropertyValue('padding-top')) >= 20 ||
-      parseFloat(getComputedStyle(Ele).getPropertyValue('margin-top')) >= 20 ||
-      parseFloat(getComputedStyle(Ele).getPropertyValue('margin-bottom')) >= 12.5
-    )
-    Targeted = Targeted.filter(Ele => [...Ele.querySelectorAll('*')].filter(Child => 
-      parseFloat(getComputedStyle(Child).getPropertyValue('padding-top')) >= 5 && parseFloat(getComputedStyle(Child).getPropertyValue('border-bottom-width')) >= 0.1
-    ).length === 1)
-    Targeted = await (async () => {
-      const NextTargeted = []
+  async function ExecuteOCR(Targeted: HTMLElement[]) {
+    const NextTargeted = []
       for (const Parent of Targeted) {
         const CandidateChildren = [...Parent.querySelectorAll('*')]
           .filter(Child => Child instanceof HTMLElement)
           .filter(Child =>
             Child instanceof HTMLImageElement ||
             getComputedStyle(Child).backgroundImage !== 'none'
-          )
+          ).filter(Child => parseFloat(getComputedStyle(Child).getPropertyValue('width')) >= 5 && parseFloat(getComputedStyle(Child).getPropertyValue('height')) >= 5)
+          .filter(Child => parseFloat(getComputedStyle(Child).getPropertyValue('width')) <= 50 && parseFloat(getComputedStyle(Child).getPropertyValue('height')) <= 50)
         let MatchedCount = 0
         for (const Child of CandidateChildren) {
           const Result = await OCRInstance.DetectFromElement(Child, {
@@ -87,7 +78,34 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
         }
       }
       return NextTargeted
-    })()
+  }
+
+  ArticleHTMLElement.addEventListener('vue:settled', async () => {
+    let Targeted = [...document.querySelectorAll('#app div[class] div[class] ~ div[class]')].filter(Ele => Ele instanceof HTMLElement)
+    Targeted = Targeted.filter(Ele =>
+      parseFloat(getComputedStyle(Ele).getPropertyValue('padding-top')) >= 20 ||
+      parseFloat(getComputedStyle(Ele).getPropertyValue('margin-top')) >= 20 ||
+      parseFloat(getComputedStyle(Ele).getPropertyValue('margin-bottom')) >= 12.5
+    )
+    Targeted = Targeted.filter(Ele => {
+      let Children = [...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement)
+      // non-HTMLTableElement
+      if (Children.filter(Child => 
+        parseFloat(getComputedStyle(Child).getPropertyValue('padding-top')) >= 5 &&
+        parseFloat(getComputedStyle(Child).getPropertyValue('border-bottom-width')) >= 0.1
+      ).length === 1) return true
+      // HTMLTableElement
+      return Children.filter(Child => (Child instanceof HTMLTableElement || Child instanceof HTMLTableCellElement) &&
+        parseFloat(getComputedStyle(Child).getPropertyValue('padding-top')) >= 5 && parseFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')) >= 5).length >= 2
+    })
+    Targeted = Targeted.filter(Ele => {
+      let Children = [...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement)
+      return !Children.some(Child => {
+        return parseFloat(getComputedStyle(Child).getPropertyValue('margin-bottom')) >= 10 && parseFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')) >= 1 && parseFloat(getComputedStyle(Child).getPropertyValue('padding-top')) >= 1 &&
+        parseFloat(getComputedStyle(Child).getPropertyValue('border-top-width')) >= 0.25 && parseFloat(getComputedStyle(Child).getPropertyValue('border-bottom-width')) >= 0.25
+      })
+    })
+    Targeted = await ExecuteOCR(Targeted)
     Targeted.forEach(Ele => Targeted.push(...new Set([...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement))))
     Targeted = [...new Set(Targeted)]
     let RealTargeted = Targeted.filter(Ele => parseFloat(getComputedStyle(Ele).getPropertyValue('padding-left')) >= 5 && parseFloat(getComputedStyle(Ele).getPropertyValue('border-right-width')) >= 0.1)
@@ -95,9 +113,13 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
     RealTargeted.forEach(Ele => {
       Ele.style.setProperty('display', 'none', 'important')
     })
-    let FrameTargeted = Targeted.filter(Ele => Ele instanceof HTMLElement && Ele.innerText.trim().length === 0)
-    console.debug(`[${UserscriptName}] vue:settled FrameTargeted`, FrameTargeted)
-    FrameTargeted.forEach(Ele => {
+    let RealTabletTargeted = Targeted.filter(Ele => {
+      if (!(Ele instanceof HTMLElement) || !(Ele instanceof HTMLTableElement)) return false
+      let Children = [...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement)
+      return Children.some(Child => parseFloat(getComputedStyle(Child).getPropertyValue('padding-top')) >= 5 && parseFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')) >= 5)
+    })
+    console.debug(`[${UserscriptName}] vue:settled RealTabletTargeted`, RealTabletTargeted)
+    RealTabletTargeted.forEach(Ele => {
       Ele.style.setProperty('display', 'none', 'important')
     })
   })
