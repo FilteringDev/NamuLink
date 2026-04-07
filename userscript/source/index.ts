@@ -105,6 +105,10 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
         parseFloat(getComputedStyle(Child).getPropertyValue('border-top-width')) >= 0.25 && parseFloat(getComputedStyle(Child).getPropertyValue('border-bottom-width')) >= 0.25
       })
     })
+    Targeted = Targeted.filter(Ele => {
+      let Rect = Ele.getBoundingClientRect()
+      return Rect.width / Rect.height <= 1
+    })
     Targeted = await ExecuteOCR(Targeted)
     Targeted.forEach(Ele => Targeted.push(...new Set([...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement))))
     Targeted = [...new Set(Targeted)]
