@@ -118,8 +118,10 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
       })
     })
     Targeted = Targeted.filter(Ele => {
-      let Rect = Ele.getBoundingClientRect()
-      return Rect.width / Rect.height <= 1
+      let Children = [...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement)
+      Children = Children.filter(Child => parseFloat(getComputedStyle(Child).getPropertyValue('padding-right')) >= 10 && parseFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')) >= 10)
+      Children = Children.filter(Child => parseFloat(getComputedStyle(Child).getPropertyValue('margin-left')) >= 2.5)
+      return Children.length === 0
     })
     Targeted = await ExecuteOCR(Targeted)
     Targeted.forEach(Ele => Targeted.push(...new Set([...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement))))
