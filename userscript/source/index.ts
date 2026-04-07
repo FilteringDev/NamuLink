@@ -80,6 +80,18 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
       return NextTargeted
   }
 
+  function AllParents(Ele: HTMLElement): Set<HTMLElement> {
+    let SetHTMLElement = new Set([Ele])
+    for (let I = 0;; I++) {
+      let Upper = [...SetHTMLElement][I].parentElement
+      if (Upper === null) {
+        break
+      }
+      SetHTMLElement.add(Upper)
+    }
+    return SetHTMLElement
+  }
+
   ArticleHTMLElement.addEventListener('vue:settled', async () => {
     let Targeted = [...document.querySelectorAll('#app div[class] div[class] ~ div[class]')].filter(Ele => Ele instanceof HTMLElement)
     Targeted = Targeted.filter(Ele =>
@@ -124,6 +136,17 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
     })
     console.debug(`[${UserscriptName}] vue:settled RealTabletTargeted`, RealTabletTargeted)
     RealTabletTargeted.forEach(Ele => {
+      Ele.style.setProperty('display', 'none', 'important')
+    })
+
+    // leftover
+    const PlaceHolderCandidated: Set<HTMLElement> = new Set([...RealTargeted, ...RealTabletTargeted])
+    PlaceHolderCandidated.forEach(PlaceHolder => {
+      let Parents = [...AllParents(PlaceHolder)].filter(Ele => Ele.innerText.trim().length === 0)
+      Parents.forEach(Ele => PlaceHolderCandidated.add(Ele))
+    })
+    console.debug(`[${UserscriptName}] vue:settled PlaceHolderCandidated`, PlaceHolderCandidated);
+    [...PlaceHolderCandidated].forEach(Ele => {
       Ele.style.setProperty('display', 'none', 'important')
     })
   })
