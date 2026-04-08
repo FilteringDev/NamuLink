@@ -57,7 +57,9 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
     LastMutationAt = performance.now()
 
     EmitChange(Mutations)
-    ArmSettledTimer()
+    if (Mutations.length >= 25) {
+      ArmSettledTimer()
+    }
   })
 
   Observer.observe(TargetEl, {

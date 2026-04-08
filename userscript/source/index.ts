@@ -45,10 +45,12 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
   })
 
   const ArticleHTMLElement = await WaitForElement('#app', BrowserWindow.document)
+  const EventName = 'vue:settled'
+  const ChangeEventName = 'vue:change'
   AttachVueSettledEvents(ArticleHTMLElement, {
-    QuietMs: 250,
-    EventName: 'vue:settled',
-    ChangeEventName: 'vue:change'
+    QuietMs: 75,
+    EventName: EventName,
+    ChangeEventName: ChangeEventName
   })
 
   const OCRInstance = CreateOcrWorkerClient(BrowserWindow, new Worker(URL.createObjectURL(new Blob([__OCR_WORKER_CODE__], { type: 'application/javascript' }))))
@@ -92,7 +94,7 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
     return SetHTMLElement
   }
 
-  ArticleHTMLElement.addEventListener('vue:settled', async () => {
+  async function Handler(EventParameter: Event) {
     let Targeted = [...document.querySelectorAll('#app div[class] div[class] ~ div[class]')].filter(Ele => Ele instanceof HTMLElement)
     Targeted = Targeted.filter(Ele =>
       parseFloat(getComputedStyle(Ele).getPropertyValue('padding-top')) >= 20 ||
@@ -127,7 +129,7 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
     Targeted.forEach(Ele => Targeted.push(...new Set([...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement))))
     Targeted = [...new Set(Targeted)]
     let RealTargeted = Targeted.filter(Ele => parseFloat(getComputedStyle(Ele).getPropertyValue('padding-left')) >= 5 && parseFloat(getComputedStyle(Ele).getPropertyValue('border-right-width')) >= 0.1)
-    console.debug(`[${UserscriptName}] vue:settled RealTargeted`, RealTargeted)
+    console.debug(`[${UserscriptName}] ${EventParameter.type} RealTargeted`, RealTargeted, EventParameter)
     RealTargeted.forEach(Ele => {
       Ele.style.setProperty('display', 'none', 'important')
     })
@@ -136,7 +138,7 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
       let Children = [...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement)
       return Children.some(Child => parseFloat(getComputedStyle(Child).getPropertyValue('padding-top')) >= 5 && parseFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')) >= 5)
     })
-    console.debug(`[${UserscriptName}] vue:settled RealTabletTargeted`, RealTabletTargeted)
+    console.debug(`[${UserscriptName}] ${EventParameter.type} RealTabletTargeted`, RealTabletTargeted, EventParameter)
     RealTabletTargeted.forEach(Ele => {
       Ele.style.setProperty('display', 'none', 'important')
     })
@@ -147,11 +149,13 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
       let Parents = [...AllParents(PlaceHolder)].filter(Ele => Ele.innerText.trim().length === 0)
       Parents.forEach(Ele => PlaceHolderCandidated.add(Ele))
     })
-    console.debug(`[${UserscriptName}] vue:settled PlaceHolderCandidated`, PlaceHolderCandidated);
+    console.debug(`[${UserscriptName}] ${EventParameter.type} PlaceHolderCandidated`, PlaceHolderCandidated, EventParameter);
     [...PlaceHolderCandidated].forEach(Ele => {
       Ele.style.setProperty('display', 'none', 'important')
     })
-  })
+  }
+
+  ArticleHTMLElement.addEventListener('vue:settled', (EventParameter) => Handler(EventParameter))
 
   // init Naver Nanum fonts
   const FontAddr = [
