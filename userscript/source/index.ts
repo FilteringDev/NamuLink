@@ -47,10 +47,12 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
   const ArticleHTMLElement = await WaitForElement('#app', BrowserWindow.document)
   const EventName = 'vue:settled'
   const ChangeEventName = 'vue:change'
+  const UrlChangeEventName = 'vue:url-changed'
   AttachVueSettledEvents(ArticleHTMLElement, {
     QuietMs: 75,
     EventName: EventName,
-    ChangeEventName: ChangeEventName
+    ChangeEventName: ChangeEventName,
+    UrlChange: UrlChangeEventName
   })
 
   const OCRInstance = CreateOcrWorkerClient(BrowserWindow, new Worker(URL.createObjectURL(new Blob([__OCR_WORKER_CODE__], { type: 'application/javascript' }))))
@@ -156,6 +158,7 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
   }
 
   ArticleHTMLElement.addEventListener('vue:settled', (EventParameter) => Handler(EventParameter))
+  ArticleHTMLElement.addEventListener('vue:url-changed', (EventParameter) => setTimeout(() => Handler(EventParameter), 250))
 
   // init Naver Nanum fonts
   const FontAddr = [

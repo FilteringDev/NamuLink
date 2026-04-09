@@ -1,7 +1,8 @@
-export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs?: number; EventName?: string; ChangeEventName?: string } = {}) {
+export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs?: number; EventName?: string; ChangeEventName?: string; UrlChange?: string } = {}) {
   const QuietMs = Options.QuietMs ?? 120
   const EventName = Options.EventName ?? 'vue:settled'
   const ChangeEventName = Options.ChangeEventName ?? 'vue:dom-changed'
+  const UrlChangeEventName = Options.UrlChange ?? 'vue:url-changed'
 
   if (!(TargetEl instanceof HTMLElement)) {
     throw new TypeError('TargetEl must be an HTMLElement')
@@ -11,6 +12,7 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
   let Seq = 0
   let Destroyed = false
   let LastMutationAt = performance.now()
+  let URLHistory: URL = new URL(location.href)
 
   const EmitChange = (Mutations: MutationRecord[]) => {
     TargetEl.dispatchEvent(
@@ -47,6 +49,22 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
     })
   }
 
+  const EmitUrlChange = () => {
+    const NewURL = new URL(location.href)
+    if (NewURL.href !== URLHistory.href) {
+      URLHistory = NewURL
+      TargetEl.dispatchEvent(
+        new CustomEvent(UrlChangeEventName, {
+          detail: {
+            Seq,
+            At: performance.now(),
+            URL: NewURL,
+          },
+        }),
+      )
+    }
+  }
+
   const ArmSettledTimer = () => {
     clearTimeout(Timer)
     Timer = setTimeout(EmitSettled, QuietMs)
@@ -60,6 +78,7 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
     if (Mutations.length >= 25) {
       ArmSettledTimer()
     }
+    EmitUrlChange()
   })
 
   Observer.observe(TargetEl, {
