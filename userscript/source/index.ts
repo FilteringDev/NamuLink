@@ -127,6 +127,20 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
       Children = Children.filter(Child => parseFloat(getComputedStyle(Child).getPropertyValue('margin-left')) >= 2.5)
       return Children.length === 0
     })
+    Targeted = Targeted.filter(Ele => {
+      if (Ele.getBoundingClientRect().width < 500) return false
+      let Children = [...Ele.querySelectorAll('*[style]')].filter(Child => Child instanceof HTMLElement && Child.style.length > 0)
+      return Children.filter(Child => {
+        if (!(Child instanceof HTMLElement)) return false
+        const ComputedStyle = getComputedStyle(Child)
+        const MissingCount = [...Child.style].filter(Property => {
+          const InlineValue = Child.style.getPropertyValue(Property).trim()
+          const ComputedValue = ComputedStyle.getPropertyValue(Property).trim()
+          return InlineValue !== ComputedValue
+        }).length
+        return MissingCount <= 1
+      }).length < 5
+    })
     Targeted = await ExecuteOCR(Targeted)
     Targeted.forEach(Ele => Targeted.push(...new Set([...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement))))
     Targeted = [...new Set(Targeted)]
