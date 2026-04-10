@@ -128,7 +128,7 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
       return Children.length === 0
     })
     Targeted = Targeted.filter(Ele => {
-      if (Ele.getBoundingClientRect().width < 500) return false
+      if (Ele.getBoundingClientRect().width < 500 && BrowserWindow.document.body.getBoundingClientRect().width > 500) return false
       let Children = [...Ele.querySelectorAll('*[style]')].filter(Child => Child instanceof HTMLElement && Child.style.length > 0)
       return Children.filter(Child => {
         if (!(Child instanceof HTMLElement)) return false
