@@ -82,6 +82,7 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
       ...(Mutation.target ? [Mutation.target] : [])
     ]).length >= 15) {
       ArmSettledTimer()
+      setTimeout(ArmSettledTimer, QuietMs * 3)
     }
     EmitUrlChange()
   })
