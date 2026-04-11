@@ -75,7 +75,7 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
     LastMutationAt = performance.now()
 
     EmitChange(Mutations)
-    if (Mutations.flatMap(Mutation => [...Mutation.addedNodes, ...Mutation.removedNodes, ...Mutation.target ? [Mutation.target] : []]).length >= 20) {
+    if (Mutations.flatMap(Mutation => [...Mutation.addedNodes, ...Mutation.removedNodes, ...Mutation.target ? [Mutation.target] : []]).length >= 15) {
       ArmSettledTimer()
     }
     EmitUrlChange()
