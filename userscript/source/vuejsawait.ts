@@ -75,7 +75,7 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
     LastMutationAt = performance.now()
 
     EmitChange(Mutations)
-    if (Mutations.length >= 25) {
+    if (Mutations.length >= 10) {
       ArmSettledTimer()
     }
     EmitUrlChange()
