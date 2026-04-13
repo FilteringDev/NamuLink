@@ -487,6 +487,8 @@ function CompositeImageDataOnBackground(Source: ImageData, BackgroundCssColor: s
 }
 
 self.addEventListener('message', (Event: MessageEvent<WorkerDetectRequest>) => {
+	if (Event.origin !== '') return
+
 	void (async () => {
 		const Message = Event.data
 		if (!Message || Message.Kind !== 'detect') return
