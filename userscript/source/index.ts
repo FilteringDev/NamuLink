@@ -24,22 +24,35 @@ declare const __OCR_WORKER_CODE__: string
 export async function RunNamuLinkUserscript(BrowserWindow: typeof window, UserscriptName: string = 'NamuLink'): Promise<void> {
   const OriginalReflectApply = BrowserWindow.Reflect.apply
 
-  let PL2AfterLoadInitTimerPatterns: RegExp[][] = [[
-    /\( *\) *=> *{ *var *_0x[0-9a-z]+ *= *a0_0x[0-9a-f]+ *; *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\]\(\); *}/,
-    /\( *\) *=> *{ *var *_0x[0-9a-z]+ *= *a0_0x[0-9a-f]+ *; *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\]\(\); *}/
-  ], [
-    /\( *\) *=> *{ *var _0x[a-z0-9]+ *= *_0x[a-z0-9]+ *; *if *\( *this\[ *_0x[a-z0-9]+ *\( *0x[0-9a-f]+ *\) *\] *\) *return *clearTimeout/,
-    /\( *0x[0-9a-f]+ *\) *\] *\) *, *void *\( *this\[ *_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\] *= *void *\([x0-9a-f*+-]+ *\) *\) *; *this\[_0x[a-z0-9]+\( *0x[0-9a-f]+ *\) *\] *\(\) *;/
+  const PL2PromiseThenRegexs: RegExp[][] = [[
+    /function *[A-Za-z0-9]+ *\([A-Za-z0-9]+ * *\) *{ *function *[A-Za-z0-9]+ *\( *[a-zA-Z]+ *, *[A-Za-z]+ *\) *{ *return *[A-Za-z0-9]+ *\( */,
+    /{ *return *[A-Za-z0-9]+ *\( *[a-zA-Z]+ *- *0x[a-f0-9]+ *, *[a-zA-Z]+ *\) *; *\} *[A-Za-z0-9]+ *\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+/,
+    /\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *\( *0x[a-f0-9]+ *, *0x[a-f0-9]+ *\) *, *[A-Za-z0-9]+ *\) *;/
   ]]
 
-  BrowserWindow.setTimeout = new Proxy(BrowserWindow.setTimeout, {
-    apply(Target: typeof setTimeout, ThisArg: undefined, Args: Parameters<typeof setTimeout>) {
-      let StringifiedFunc = String(Args[0])
-      if (PL2AfterLoadInitTimerPatterns.filter(PowerLinkGenerationSkeletionPositiveRegExp => PowerLinkGenerationSkeletionPositiveRegExp.filter(Index => Index.test(StringifiedFunc)).length >= 1).length === 1) {
-        console.debug(`[${UserscriptName}]: setTimeout called for PowerLink Skeleton:`, Args[0])
-        return OriginalReflectApply(Target, ThisArg, [() => {}, 0])
+  BrowserWindow.Promise.prototype.then = new Proxy(BrowserWindow.Promise.prototype.then, {
+    apply(Target: typeof Promise.prototype.then, ThisArg: Promise<unknown>, Args: Parameters<typeof Promise.prototype.then>) {
+      if (typeof Args[0] !== 'function' || typeof Args[1] !== 'function') {
+        return OriginalReflectApply(Target, ThisArg, Args)
       }
-
+      const Stringified: [string, string] = [String(Args[0]), String(Args[1])]
+      if (Stringified.every(Str => PL2PromiseThenRegexs.filter(Regexs => Regexs.filter(Regex => Regex.test(Str)).length === Regexs.length).length === 1)) {
+        console.debug(`[${UserscriptName}] Detected PL2 Promise.then`, Stringified, Args)
+        setTimeout(() => {
+          let Targeted = [...document.querySelectorAll('#app div[class] div[class] ~ div[class]')].filter(Ele => Ele instanceof HTMLElement)
+          Targeted = Targeted.filter(Ele => parseFloat(getComputedStyle(Ele).getPropertyValue('margin-bottom')) >= 12.5)
+          Targeted = Targeted.filter(Ele => Ele.innerText.trim().length === 0)
+          Targeted = Targeted.filter(Ele => [...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement).some(Child => {
+            const Height = Child.getBoundingClientRect().height
+            return Height > 0 && Height <= 5
+          }))
+          console.debug(`[${UserscriptName}] Detected PL2 Promise.then Targeted`, Targeted)
+          Targeted.forEach(Ele => {
+            Ele.style.setProperty('display', 'none', 'important')
+          })
+        }, 250)
+        return
+      }
       return OriginalReflectApply(Target, ThisArg, Args)
     }
   })
