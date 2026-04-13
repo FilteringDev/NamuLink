@@ -26,7 +26,7 @@ export async function RunNamuLinkUserscript(BrowserWindow: typeof window, Usersc
 
   const PL2PromiseThenRegexs: RegExp[][] = [[
     /function *[A-Za-z0-9]+ *\([A-Za-z0-9]+ * *\) *{ *function *[A-Za-z0-9]+ *\( *[a-zA-Z]+ *, *[A-Za-z]+ *\) *{ *return *[A-Za-z0-9]+ *\( */,
-    /{ *return *[A-Za-z0-9]+ *\( *[a-zA-Z]+ *- *0x[a-f0-9]+ *, *[a-zA-Z]+ *\) *; *\} *[A-Za-z0-9]+ *\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+/,
+    /{ *return *[A-Za-z0-9]+ *\( *[a-zA-Z]+[- ]*0x[a-f0-9]+ *, *[a-zA-Z]+ *\) *; *\} *[A-Za-z0-9]+ *\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+/,
     /\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *\( *0x[a-f0-9]+ *, *0x[a-f0-9]+ *\) *, *[A-Za-z0-9]+ *\) *;/
   ]]
 
