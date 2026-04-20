@@ -1,12 +1,10 @@
-import * as RsPack from '@rspack/core'
-import * as Memfs from 'memfs'
+import * as ESBuild from 'esbuild'
 import * as Zod from 'zod'
 import * as Process from 'node:process'
 import * as Path from 'node:path'
 import PackageJson from '@npmcli/package-json'
 import { CreateBanner } from './banner/index.js'
 import { SafeInitCwd } from './utils/safe-init-cwd.js'
-import { RunCompiler } from './utils/awaited-rspack.js'
 
 export type BuildOptions = {
   Minify: boolean
@@ -47,87 +45,25 @@ export async function Build(OptionsParam?: BuildOptions): Promise<void> {
     }
   })
 
-  const TypescriptLoader = {
-    test: /\.ts$/,
-    exclude: ['/node_modules/'],
-    loader: 'builtin:swc-loader',
-    options: {
-      jsc: {
-        parser: {
-          syntax: 'typescript',
-          decorators: true,
-          dynamicImport: true
-        }
-      }
-    },
-    type: 'javascript/auto'
-  } satisfies RsPack.RuleSetRule
+  const WorkerCode = await ESBuild.build({
+    entryPoints: [Path.resolve(ProjectRoot, 'userscript', 'source', 'ocr-worker.ts')],
+    bundle: true,
+    minify: Options.Minify,
+    write: false,
+    target: ['es2024', 'chrome119', 'firefox142', 'safari26']
+  })
 
-  const WorkerContainer = Memfs.createFsFromVolume(new Memfs.Volume())
-  const WorkerBuilder = RsPack.rspack({
-    entry: [Path.resolve(ProjectRoot, 'userscript', 'source', 'ocr-worker.ts')],
-    mode: Options.BuildType,
-    optimization: {
-      minimize: Options.Minify
+  await ESBuild.build({
+    entryPoints: [Path.resolve(ProjectRoot, 'userscript', 'source', 'index.ts')],
+    bundle: true,
+    minify: Options.Minify,
+    outfile: `${ProjectRoot}/dist/NamuLink${Options.BuildType === 'development' ? '.dev' : ''}.user.js`,
+    banner: {
+      js: Banner
     },
-    target: ['es2024', 'webworker'],
-    output: {
-      path: Path.resolve('/'),
-      filename: 'ocr-worker.js'
-    },
-    resolve: {
-      extensions: ['.ts', '.js', '.json'],
-      extensionAlias: {
-        '.js': ['.ts', '.js']
-      }
-    },
-    module: {
-      rules: [TypescriptLoader]
+    target: ['es2024', 'chrome119', 'firefox142', 'safari26'],
+    define: {
+      __OCR_WORKER_CODE__: JSON.stringify(WorkerCode.outputFiles[0].text)
     }
   })
-  //@ts-expect-error https://github.com/web-infra-dev/rspack/issues/5091
-  WorkerBuilder.outputFileSystem = WorkerContainer
-  await RunCompiler(WorkerBuilder)
-
-  const MainBuilder = RsPack.rspack({
-    entry: [Path.resolve(ProjectRoot, 'userscript', 'source', 'index.ts')],
-    mode: Options.BuildType,
-    optimization: {
-      minimize: Options.Minify,
-      minimizer: [
-        new RsPack.SwcJsMinimizerRspackPlugin({
-          minimizerOptions: {
-            format: {
-              comments: 'all'
-            }
-          }
-        })
-      ]
-    },
-    plugins: [
-      new RsPack.BannerPlugin({
-        banner: Banner,
-        raw: true
-      }),
-      new RsPack.DefinePlugin({
-        __OCR_WORKER_CODE__: JSON.stringify(WorkerContainer.readFileSync(Path.resolve('/', 'ocr-worker.js'), 'utf-8'))
-      })
-    ],
-    output: {
-      path: Path.resolve(ProjectRoot, 'dist'),
-      filename: `NamuLink${Options.BuildType === 'development' ? '.dev' : ''}.user.js`
-    },
-    resolve: {
-      extensions: ['.ts', '.js', '.json'],
-      extensionAlias: {
-        '.js': ['.ts', '.js']
-      }
-    },
-    module: {
-      rules: [TypescriptLoader]
-    },
-    target: ['es2024', 'web']
-  })
-
-  await RunCompiler(MainBuilder)
 }
