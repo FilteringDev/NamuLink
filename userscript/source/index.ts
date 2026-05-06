@@ -22,6 +22,8 @@ import { CreateOcrWorkerClient } from './ocr-client.js'
 // eslint-disable-next-line @typescript-eslint/naming-convention
 declare const __OCR_WORKER_CODE__: string
 
+// BUILD:START
+
 const OriginalReflectApply = Win.Reflect.apply
 
 const PL2PromiseThenRegexs: RegExp[][] = [[
