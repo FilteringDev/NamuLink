@@ -30,6 +30,8 @@ export function CreateBanner(Options: BannerOptions): string {
   BannerString += '// @grant        unsafeWindow\n'
   BannerString += '// @grant        GM.xmlHttpRequest\n'
   BannerString += '// @run-at       document-start\n'
+  BannerString += '// @connect      self\n'
+  BannerString += '// @connect      namu.wiki\n'
   BannerString += '//\n'
   BannerString += `// @description  ${Options.Description['en']}\n`
   
