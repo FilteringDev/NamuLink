@@ -9,7 +9,7 @@
     "clean": "rm -rf dist && rm -rf .buildcache"
   },
   "devDependencies": {
-    "@npmcli/package-json": "^7.0.5",
+    "@npmcli/package-json": "^8.0.0",
     "@types/node": "^24.12.4",
     "@types/npmcli__package-json": "^4.0.4",
     "@typescript-eslint/eslint-plugin": "^8.59.4",
