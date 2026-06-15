@@ -32,6 +32,9 @@ jobs:
   build:
     name: Build the project
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build-script: [ build:stable, build:dev ]
     permissions:
       contents: read
     steps:
@@ -47,6 +50,6 @@ jobs:
         run: mkdir -p ~/.pnpm-store && pnpm config set store-dir ~/.pnpm-store
       - name: Install dependencies
         run: pnpm install --no-lockfile
-      - name: Build the project
-        run: npm run build
+      - name: Build the project (${{ matrix.build-script }})
+        run: npm run ${{ matrix.build-script }}
     
