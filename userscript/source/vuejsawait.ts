@@ -15,8 +15,6 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
   let LastMutationAt = performance.now()
   let URLHistory: URL = new URL(location.href)
 
-  let BlackBlankRemovedCounter: boolean = false
-
   const EmitChange = (Mutations: MutationRecord[]) => {
     TargetEl.dispatchEvent(
       new CustomEvent(ChangeEventName, {
@@ -105,7 +103,7 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
       setTimeout(ArmSettledTimer, QuietMs * 3)
     }
     if (AllNodes.some(MNode => MNode instanceof HTMLElement && parseFloat(getComputedStyle(MNode).getPropertyValue('margin-bottom')) > 10 && MNode.innerText.trim().length === 0)) {
-      RepeatWithInterval(5, QuietMs * 2, EmitBlackBlank)
+      EmitBlackBlank()
     }
     EmitUrlChange()
   })
@@ -132,13 +130,4 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
       )
     },
   }
-}
-
-function RepeatWithInterval(RepeatCount: number, DelayMs: number, Func: () => void) {
-  let Count = 0
-  const Id = setInterval(() => {
-    Count++
-    Func()
-    if (Count >= RepeatCount) clearInterval(Id)
-  }, DelayMs)
 }

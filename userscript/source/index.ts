@@ -190,7 +190,7 @@ async function Handler(EventParameter: Event) {
 
 ArticleHTMLElement.addEventListener('vue:settled', (EventParameter) => Handler(EventParameter))
 ArticleHTMLElement.addEventListener('vue:url-changed', (EventParameter) => setTimeout(() => Handler(EventParameter), 250))
-ArticleHTMLElement.addEventListener('vue:black-blank', (EventParameter) => setTimeout(() => Handler(EventParameter), 250))
+ArticleHTMLElement.addEventListener('vue:black-blank', (EventParameter) => setTimeout(() => Handler(EventParameter), 1500))
 
 // init Naver Nanum fonts
 const FontAddr = [
