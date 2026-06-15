@@ -63,11 +63,13 @@ const ArticleHTMLElement = await WaitForElement('#app', Win.document)
 const EventName = 'vue:settled'
 const ChangeEventName = 'vue:change'
 const UrlChangeEventName = 'vue:url-changed'
+const UrlBlackBlankEventName = 'vue:black-blank'
 AttachVueSettledEvents(ArticleHTMLElement, {
   QuietMs: 75,
   EventName: EventName,
   ChangeEventName: ChangeEventName,
-  UrlChange: UrlChangeEventName
+  UrlChange: UrlChangeEventName,
+  BlackBlank: UrlBlackBlankEventName
 })
 
 const OCRInstance = CreateOcrWorkerClient(Win, new Worker(URL.createObjectURL(new Blob([__OCR_WORKER_CODE__], { type: 'application/javascript' }))))
@@ -154,7 +156,7 @@ async function Handler(EventParameter: Event) {
         return InlineValue !== ComputedValue
       }).length
       return MissingCount <= 1
-    }).length < 5
+    }).length < 10
   })
   Targeted = await ExecuteOCR(Targeted)
   Targeted.forEach(Ele => Targeted.push(...new Set([...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement))))
@@ -188,6 +190,7 @@ async function Handler(EventParameter: Event) {
 
 ArticleHTMLElement.addEventListener('vue:settled', (EventParameter) => Handler(EventParameter))
 ArticleHTMLElement.addEventListener('vue:url-changed', (EventParameter) => setTimeout(() => Handler(EventParameter), 250))
+ArticleHTMLElement.addEventListener('vue:black-blank', (EventParameter) => setTimeout(() => Handler(EventParameter), 1500))
 
 // init Naver Nanum fonts
 const FontAddr = [

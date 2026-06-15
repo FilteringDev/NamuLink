@@ -32,7 +32,7 @@ jobs:
       - name: Bump package.json version from tag
         uses: TypescriptPrime/bump-packagejson-version@72720c4d073ed0c5b9e9393d7334abfe3fabb47c
       - name: Build
-        run: npm run build
+        run: npm run build:stable
       - name : Publish to npm
         run: npm publish --access public
     if: ${{ github.event_name == 'release' && github.event.release.prerelease == false }}
@@ -61,7 +61,7 @@ jobs:
       - name: Bump package.json version from tag
         uses: TypescriptPrime/bump-packagejson-version@72720c4d073ed0c5b9e9393d7334abfe3fabb47c
       - name: Build
-        run: npm run build
+        run: npm run build:stable
       - name : Publish to npm
         run: npm publish --tag beta --access public
     if: ${{ github.event_name == 'release' && github.event.release.prerelease == true && contains(github.event.release.tag_name, '-beta.') }}
@@ -90,7 +90,7 @@ jobs:
       - name: Bump package.json version from tag
         uses: TypescriptPrime/bump-packagejson-version@72720c4d073ed0c5b9e9393d7334abfe3fabb47c
       - name: Build
-        run: npm run build
+        run: npm run build:dev
       - name : Publish to npm
         run: npm publish --tag build --access public
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && contains(github.ref, '-build.') }}
