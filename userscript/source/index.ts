@@ -156,7 +156,7 @@ async function Handler(EventParameter: Event) {
         return InlineValue !== ComputedValue
       }).length
       return MissingCount <= 1
-    }).length < 5
+    }).length < 10
   })
   Targeted = await ExecuteOCR(Targeted)
   Targeted.forEach(Ele => Targeted.push(...new Set([...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement))))
