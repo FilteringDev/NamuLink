@@ -15,6 +15,8 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
   let LastMutationAt = performance.now()
   let URLHistory: URL = new URL(location.href)
 
+  let BlackBlankRemovedCounter: boolean = false
+
   const EmitChange = (Mutations: MutationRecord[]) => {
     TargetEl.dispatchEvent(
       new CustomEvent(ChangeEventName, {
@@ -102,7 +104,11 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
       ArmSettledTimer()
       setTimeout(ArmSettledTimer, QuietMs * 3)
     }
-    if (AllNodes.some(MNode => MNode instanceof HTMLElement && parseFloat(getComputedStyle(MNode).getPropertyValue('margin-bottom')) > 10 && MNode.innerText.trim().length === 0)) {
+    if (!BlackBlankRemovedCounter && AllNodes.some(MNode => MNode instanceof HTMLElement && parseFloat(getComputedStyle(MNode).getPropertyValue('margin-bottom')) > 10 && MNode.innerText.trim().length === 0)) {
+      BlackBlankRemovedCounter = true
+    }
+    if (BlackBlankRemovedCounter && AllNodes.filter(MNode => MNode instanceof HTMLImageElement).length >= 3) {
+      BlackBlankRemovedCounter = false
       EmitBlackBlank()
     }
     EmitUrlChange()
