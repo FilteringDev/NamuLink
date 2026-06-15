@@ -3,6 +3,7 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
   const EventName = Options.EventName ?? 'vue:settled'
   const ChangeEventName = Options.ChangeEventName ?? 'vue:dom-changed'
   const UrlChangeEventName = Options.UrlChange ?? 'vue:url-changed'
+  const UrlBlackBlankEventName = Options.UrlChange ?? 'vue:black-blank'
 
   if (!(TargetEl instanceof HTMLElement)) {
     throw new TypeError('TargetEl must be an HTMLElement')
@@ -65,6 +66,20 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
     }
   }
 
+  const EmitBlackBlank = () => {
+    TargetEl.dispatchEvent(
+      new CustomEvent(UrlBlackBlankEventName, {
+        detail: {
+          Seq,
+          QuietMs,
+          SettledAt: performance.now(),
+          ElapsedSinceLastMutation: performance.now() - LastMutationAt,
+          Target: TargetEl,
+        }
+      })
+    )
+  }
+
   const ArmSettledTimer = () => {
     clearTimeout(Timer)
     Timer = setTimeout(EmitSettled, QuietMs)
@@ -75,23 +90,20 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
     LastMutationAt = performance.now()
 
     EmitChange(Mutations)
-    if (Mutations.flatMap(Mutation => [
+
+    const AllNodes = Mutations.flatMap(Mutation => [
       ...Mutation.addedNodes, ...Mutation.removedNodes,
       ...Mutation.nextSibling ? [Mutation.nextSibling] : [],
       ...Mutation.previousSibling ? [Mutation.previousSibling] : [],
       ...(Mutation.target ? [Mutation.target] : [])
-    ]).length >= 15) {
+    ])
+    
+    if (AllNodes.length >= 15) {
       ArmSettledTimer()
       setTimeout(ArmSettledTimer, QuietMs * 3)
     }
-    if (Mutations.flatMap(Mutation => [
-      ...Mutation.addedNodes, ...Mutation.removedNodes,
-      ...Mutation.nextSibling ? [Mutation.nextSibling] : [],
-      ...Mutation.previousSibling ? [Mutation.previousSibling] : [],
-      ...(Mutation.target ? [Mutation.target] : [])
-    ]).some(MNode => MNode instanceof HTMLElement && parseFloat(getComputedStyle(MNode).getPropertyValue('margin-bottom')) > 10 && MNode.innerText.trim().length === 0)) {
-      ArmSettledTimer()
-      setTimeout(ArmSettledTimer, QuietMs * 3)
+    if (AllNodes.some(MNode => MNode instanceof HTMLElement && parseFloat(getComputedStyle(MNode).getPropertyValue('margin-bottom')) > 10 && MNode.innerText.trim().length === 0)) {
+      EmitBlackBlank()
     }
     EmitUrlChange()
   })
