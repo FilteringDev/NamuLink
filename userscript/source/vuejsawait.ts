@@ -84,6 +84,14 @@ export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs
       ArmSettledTimer()
       setTimeout(ArmSettledTimer, QuietMs * 3)
     }
+    if (Mutations.flatMap(Mutation => [
+      ...Mutation.addedNodes, ...Mutation.removedNodes,
+      ...Mutation.nextSibling ? [Mutation.nextSibling] : [],
+      ...Mutation.previousSibling ? [Mutation.previousSibling] : [],
+      ...(Mutation.target ? [Mutation.target] : [])
+    ]).some(MNode => MNode instanceof HTMLElement && parseFloat(getComputedStyle(MNode).getPropertyValue('margin-bottom')) > 10 && MNode.innerText.trim().length === 0)) {
+      ArmSettledTimer()
+    }
     EmitUrlChange()
   })
 
