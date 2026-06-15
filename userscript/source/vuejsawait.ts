@@ -1,9 +1,9 @@
-export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs?: number; EventName?: string; ChangeEventName?: string; UrlChange?: string } = {}) {
+export function AttachVueSettledEvents(TargetEl: HTMLElement, Options: { QuietMs?: number; EventName?: string; ChangeEventName?: string; UrlChange?: string; BlackBlank?: string } = {}) {
   const QuietMs = Options.QuietMs ?? 120
   const EventName = Options.EventName ?? 'vue:settled'
   const ChangeEventName = Options.ChangeEventName ?? 'vue:dom-changed'
   const UrlChangeEventName = Options.UrlChange ?? 'vue:url-changed'
-  const UrlBlackBlankEventName = Options.UrlChange ?? 'vue:black-blank'
+  const UrlBlackBlankEventName = Options.BlackBlank ?? 'vue:black-blank'
 
   if (!(TargetEl instanceof HTMLElement)) {
     throw new TypeError('TargetEl must be an HTMLElement')
