@@ -6,7 +6,7 @@
     "lint": "tsc --noEmit && eslint **/*.ts"
   },
   "devDependencies": {
-    "@types/web": "^0.0.345",
+    "@types/web": "^0.0.350",
     "@typescript-eslint/eslint-plugin": "^8.59.4",
     "@typescript-eslint/parser": "^8.59.4",
     "@violentmonkey/types": "^0.3.3",
