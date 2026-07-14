@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "@npmcli/package-json": "^8.0.0",
-    "@types/node": "^24.12.4",
+    "@types/node": "^26.1.1",
     "@types/npmcli__package-json": "^4.0.4",
     "@typescript-eslint/eslint-plugin": "^8.59.4",
     "@typescript-eslint/parser": "^8.59.4",
