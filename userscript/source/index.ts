@@ -12,7 +12,7 @@ type unsafeWindow = typeof window
 // eslint-disable-next-line @typescript-eslint/naming-convention
 declare const unsafeWindow: unsafeWindow
 
-import { DeleteValueAtPath, MatchValueSchema, ParsePath, SetValueAtPath, type ValueSchema } from './startrick.js'
+import { MatchValueSchema, SetValueAtPath, type ValueSchema } from './startrick.js'
 
 const Win = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window
 const UserscriptName = 'NamuLink'
