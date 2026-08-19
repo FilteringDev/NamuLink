@@ -110,14 +110,6 @@ export async function Build(OptionsParam?: BuildOptions): Promise<void> {
     }
   })
 
-  const WorkerCode = await ESBuild.build({
-    entryPoints: [Path.resolve(ProjectRoot, 'userscript', 'source', 'ocr-worker.ts')],
-    bundle: true,
-    minify: Options.Minify,
-    write: false,
-    target: ['es2024', 'chrome119', 'firefox142', 'safari26']
-  })
-
   const VirtualIndexEntry = await CreateVirtualIndexEntry(ProjectRoot)
 
   await ESBuild.build({
@@ -130,9 +122,6 @@ export async function Build(OptionsParam?: BuildOptions): Promise<void> {
       js: Banner
     },
     target: ['es2024', 'chrome119', 'firefox142', 'safari26'],
-    define: {
-      __OCR_WORKER_CODE__: JSON.stringify(WorkerCode.outputFiles[0].text)
-    },
     plugins: [
       CreateVirtualIndexEntryPlugin(VirtualIndexEntry.EntryPath, VirtualIndexEntry.FileSystem)
     ]
