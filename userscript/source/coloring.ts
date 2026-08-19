@@ -160,10 +160,21 @@ function ConvexHull2D(Points: (readonly [number, number])[]): (readonly [number,
   return [...Lower.slice(0, -1), ...Upper.slice(0, -1)]
 }
 
+function PointKey(Point: RGB): string {
+  return `${Point[0]},${Point[1]},${Point[2]}`
+}
+
 function ComputeFaces3D(Points: RGB[]): Face[] {
-  const UniquePoints = Points.filter((Point, Index) => !Points.slice(0, Index).some(Previous => Previous[0] === Point[0] && Previous[1] === Point[1] && Previous[2] === Point[2]))
+  const PointKeys = new Set<string>()
+  const UniquePoints = Points.filter(Point => {
+    const Key = PointKey(Point)
+    if (PointKeys.has(Key)) return false
+    PointKeys.add(Key)
+    return true
+  })
   const InteriorPoint = PointAverage(UniquePoints)
   const Faces: Face[] = []
+  const FaceKeys = new Set<string>()
 
   for (let I = 0; I < UniquePoints.length; I++) {
     for (let J = I + 1; J < UniquePoints.length; J++) {
@@ -178,7 +189,9 @@ function ComputeFaces3D(Points: RGB[]): Face[] {
         if (!UniquePoints.every(Point => Dot(Normal, Point) <= OutwardOffset + Epsilon)) continue
 
         const Vertices = UniquePoints.filter(Point => Math.abs(Dot(Normal, Point) - OutwardOffset) <= Epsilon)
-        if (Faces.some(FaceValue => FaceValue.Vertices.length === Vertices.length && FaceValue.Vertices.every(Point => Vertices.includes(Point)))) continue
+  const FaceKey = Vertices.map(PointKey).toSorted().join('|')
+  if (FaceKeys.has(FaceKey)) continue
+  FaceKeys.add(FaceKey)
 
         const FaceCenter = PointAverage(Vertices)
         const AxisA = Normalize(Subtract(Vertices[0], FaceCenter))

@@ -40,7 +40,7 @@ function AttachResponseHandling(WorkerInstance: WorkerLike): Map<string, Pending
 function RunOnWorker(WorkerInstance: WorkerLike, Pending: Map<string, PendingResolver>, Items: ColoringBatchItem[]): Promise<ColoringBatchResultValue[]> {
   if (Items.length === 0) return Promise.resolve([])
 
-  const RequestId = `coloring-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  const RequestId = `coloring-${crypto.randomUUID()}`
   const Request: ColoringBatchRequest = { Kind: 'batch', RequestId, Items }
 
   return new Promise<ColoringBatchResultValue[]>((Resolve, Reject) => {
