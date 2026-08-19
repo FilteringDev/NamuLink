@@ -5,6 +5,10 @@ type Facet = {
   Offset: number
 }
 
+type Face = Facet & {
+  Vertices: RGB[]
+}
+
 type AffineBasis = {
   Origin: RGB
   Basis: RGB[]
@@ -49,6 +53,14 @@ function Dot(A: RGB, B: RGB): number {
   return A[0] * B[0] + A[1] * B[1] + A[2] * B[2]
 }
 
+function Cross(A: RGB, B: RGB): RGB {
+  return [
+    A[1] * B[2] - A[2] * B[1],
+    A[2] * B[0] - A[0] * B[2],
+    A[0] * B[1] - A[1] * B[0],
+  ]
+}
+
 function Length(A: RGB): number {
   return Math.hypot(A[0], A[1], A[2])
 }
@@ -58,7 +70,7 @@ function Normalize(A: RGB): RGB {
   return Magnitude < Epsilon ? [0, 0, 0] : Scale(A, 1 / Magnitude)
 }
 
-function Centroid(Points: RGB[]): RGB {
+function PointAverage(Points: RGB[]): RGB {
   const Sum = Points.reduce<RGB>((Total, Point) => Add(Total, Point), [0, 0, 0])
   return Scale(Sum, 1 / Points.length)
 }
@@ -148,6 +160,86 @@ function ConvexHull2D(Points: (readonly [number, number])[]): (readonly [number,
   return [...Lower.slice(0, -1), ...Upper.slice(0, -1)]
 }
 
+function ComputeFaces3D(Points: RGB[]): Face[] {
+  const UniquePoints = Points.filter((Point, Index) => !Points.slice(0, Index).some(Previous => Previous[0] === Point[0] && Previous[1] === Point[1] && Previous[2] === Point[2]))
+  const InteriorPoint = PointAverage(UniquePoints)
+  const Faces: Face[] = []
+
+  for (let I = 0; I < UniquePoints.length; I++) {
+    for (let J = I + 1; J < UniquePoints.length; J++) {
+      for (let K = J + 1; K < UniquePoints.length; K++) {
+        const NormalCandidate = Cross(Subtract(UniquePoints[J], UniquePoints[I]), Subtract(UniquePoints[K], UniquePoints[I]))
+        if (Length(NormalCandidate) < Epsilon) continue
+
+        const Offset = Dot(NormalCandidate, UniquePoints[I])
+        const InteriorSide = Dot(NormalCandidate, InteriorPoint) - Offset
+        const Normal = InteriorSide > 0 ? Scale(NormalCandidate, -1) : NormalCandidate
+        const OutwardOffset = InteriorSide > 0 ? -Offset : Offset
+        if (!UniquePoints.every(Point => Dot(Normal, Point) <= OutwardOffset + Epsilon)) continue
+
+        const Vertices = UniquePoints.filter(Point => Math.abs(Dot(Normal, Point) - OutwardOffset) <= Epsilon)
+        if (Faces.some(FaceValue => FaceValue.Vertices.length === Vertices.length && FaceValue.Vertices.every(Point => Vertices.includes(Point)))) continue
+
+        const FaceCenter = PointAverage(Vertices)
+        const AxisA = Normalize(Subtract(Vertices[0], FaceCenter))
+        const AxisB = Normalize(Cross(Normal, AxisA))
+        const OrderedVertices = Vertices.toSorted((A, B) => Math.atan2(Dot(Subtract(A, FaceCenter), AxisB), Dot(Subtract(A, FaceCenter), AxisA))
+          - Math.atan2(Dot(Subtract(B, FaceCenter), AxisB), Dot(Subtract(B, FaceCenter), AxisA)))
+        Faces.push({ Normal, Offset: OutwardOffset, Vertices: OrderedVertices })
+      }
+    }
+  }
+
+  return Faces
+}
+
+function GeometricCentroid(Points: RGB[], AffineBasisResult: AffineBasis): RGB {
+  const { Origin, Basis } = AffineBasisResult
+  if (Basis.length === 0) return Origin
+
+  if (Basis.length === 1) {
+    const [Direction] = Basis
+    const Projections = Points.map(Point => Dot(Subtract(Point, Origin), Direction))
+    return Add(Origin, Scale(Direction, (Math.min(...Projections) + Math.max(...Projections)) / 2))
+  }
+
+  if (Basis.length === 2) {
+    const [DirectionA, DirectionB] = Basis
+    const Hull = ConvexHull2D(Points.map(Point => {
+      const Relative = Subtract(Point, Origin)
+      return [Dot(Relative, DirectionA), Dot(Relative, DirectionB)] as const
+    }))
+    let TwiceArea = 0
+    let WeightedX = 0
+    let WeightedY = 0
+    for (let Index = 0; Index < Hull.length; Index++) {
+      const Current = Hull[Index]
+      const Next = Hull[(Index + 1) % Hull.length]
+      const CrossValue = Current[0] * Next[1] - Next[0] * Current[1]
+      TwiceArea += CrossValue
+      WeightedX += (Current[0] + Next[0]) * CrossValue
+      WeightedY += (Current[1] + Next[1]) * CrossValue
+    }
+    if (Math.abs(TwiceArea) < Epsilon) return PointAverage(Points)
+    return Add(Origin, Add(Scale(DirectionA, WeightedX / (3 * TwiceArea)), Scale(DirectionB, WeightedY / (3 * TwiceArea))))
+  }
+
+  let SignedVolume = 0
+  let VolumeMoment: RGB = [0, 0, 0]
+  for (const FaceValue of ComputeFaces3D(Points)) {
+    const [First, ...Remaining] = FaceValue.Vertices
+    for (let Index = 0; Index < Remaining.length - 1; Index++) {
+      const Second = Remaining[Index]
+      const Third = Remaining[Index + 1]
+      const TetrahedronVolume = Dot(First, Cross(Second, Third)) / 6
+      SignedVolume += TetrahedronVolume
+      VolumeMoment = Add(VolumeMoment, Scale(Add(Add(First, Second), Third), TetrahedronVolume / 4))
+    }
+  }
+
+  return Math.abs(SignedVolume) < Epsilon ? PointAverage(Points) : Scale(VolumeMoment, 1 / SignedVolume)
+}
+
 function ComputeFacets(Points: RGB[], AffineBasisResult: AffineBasis): Facet[] {
   const { Origin, Basis } = AffineBasisResult
 
@@ -182,30 +274,8 @@ function ComputeFacets(Points: RGB[], AffineBasisResult: AffineBasis): Facet[] {
     })
   }
 
-  // Rank 3: brute-force facet enumeration over point triples (fine for the small RegionPoints sets expected here).
-  const RegionCentroid = Centroid(Points)
-  const Facets: Facet[] = []
-  for (let I = 0; I < Points.length; I++) {
-    for (let J = I + 1; J < Points.length; J++) {
-      for (let K = J + 1; K < Points.length; K++) {
-        const NormalCandidate: RGB = [
-          (Points[J][1] - Points[I][1]) * (Points[K][2] - Points[I][2]) - (Points[J][2] - Points[I][2]) * (Points[K][1] - Points[I][1]),
-          (Points[J][2] - Points[I][2]) * (Points[K][0] - Points[I][0]) - (Points[J][0] - Points[I][0]) * (Points[K][2] - Points[I][2]),
-          (Points[J][0] - Points[I][0]) * (Points[K][1] - Points[I][1]) - (Points[J][1] - Points[I][1]) * (Points[K][0] - Points[I][0]),
-        ]
-        if (Length(NormalCandidate) < Epsilon) continue
-
-        const Offset = Dot(NormalCandidate, Points[I])
-        const CentroidSide = Dot(NormalCandidate, RegionCentroid) - Offset
-        const OutwardNormal = CentroidSide > 0 ? Scale(NormalCandidate, -1) : NormalCandidate
-        const OutwardOffset = CentroidSide > 0 ? -Offset : Offset
-
-        const IsFacet = Points.every(Point => Dot(OutwardNormal, Point) <= OutwardOffset + Epsilon)
-        if (IsFacet) Facets.push({ Normal: OutwardNormal, Offset: OutwardOffset })
-      }
-    }
-  }
-  return Facets
+  // Rank 3: enumerate the small expected point sets, grouping coplanar triples into faces.
+  return ComputeFaces3D(Points)
 }
 
 /** Whether ComparePointHex lies within (or on the boundary of) the convex hull of RegionPoints. */
@@ -222,7 +292,7 @@ export function IsInsideRegion(ComparePointHex: string, RegionPoints: string[]):
   return Facets.every(Facet => Dot(Facet.Normal, ComparePoint) <= Facet.Offset + Epsilon)
 }
 
-/** 1 at the region's centroid, 0 on its boundary, -1 outside; scales linearly in between along the ray from the centroid. */
+/** 1 at the convex hull's geometric centroid, 0 on its boundary, -1 outside; scales linearly in between along the ray from the centroid. */
 export function RegionCentroidRatio(ComparePointHex: string, RegionPoints: string[]): number {
   if (RegionPoints.length === 0) throw new RangeError('RegionPoints must contain at least one color')
 
@@ -232,7 +302,7 @@ export function RegionCentroidRatio(ComparePointHex: string, RegionPoints: strin
 
   if (ResidualDistance(ComparePoint, AffineBasisResult) > Epsilon) return -1
 
-  const RegionCentroid = Centroid(Points)
+  const RegionCentroid = GeometricCentroid(Points, AffineBasisResult)
   const Direction = Subtract(ComparePoint, RegionCentroid)
   if (Length(Direction) < Epsilon) return 1
 

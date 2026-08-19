@@ -128,6 +128,33 @@ test('RegionCentroidRatio is 1 at a single-point region and -1 elsewhere', T => 
   T.is(RegionCentroidRatio('#808081', Region), -1)
 })
 
+test('RegionCentroidRatio uses the midpoint of a collinear hull instead of the point average', T => {
+  const Region = ['#000000', '#0a0a0a', '#c8c8c8']
+
+  T.is(RegionCentroidRatio('#646464', Region), 1)
+  T.not(RegionCentroidRatio('#464646', Region), 1)
+})
+
+test('RegionCentroidRatio uses the area centroid of a polygon instead of the point average', T => {
+  const Region = ['#000000', '#c80000', '#c8c800', '#00c800', '#006400']
+
+  T.is(RegionCentroidRatio('#646400', Region), 1)
+  T.not(RegionCentroidRatio('#506400', Region), 1)
+})
+
+test('RegionCentroidRatio uses the divergence-theorem volume centroid of a pyramid', T => {
+  const Pyramid = ['#000000', '#c80000', '#c8c800', '#00c800', '#6464c8']
+
+  T.is(RegionCentroidRatio('#646432', Pyramid), 1)
+  T.not(RegionCentroidRatio('#646428', Pyramid), 1)
+})
+
+test('RegionCentroidRatio ignores repeated points when finding a volume centroid', T => {
+  const Pyramid = ['#000000', '#c80000', '#c8c800', '#00c800', '#6464c8', '#6464c8']
+
+  T.is(RegionCentroidRatio('#646432', Pyramid), 1)
+})
+
 test('RegionCentroidRatio is 1 at the centroid, 0 on the boundary, and -1 outside a cube region', T => {
   const Cube = [
     '#323232', '#c83232', '#32c832', '#3232c8',
