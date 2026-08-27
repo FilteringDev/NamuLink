@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-lockfile
       - name: Bump package.json version from tag
-        uses: TypescriptPrime/bump-packagejson-version@72720c4d073ed0c5b9e9393d7334abfe3fabb47c
+        uses: TypescriptPrime/bump-packagejson-version@8b461d950090eae85d58d8a0085bfc993abdea0d
       - name: Build
         run: npm run build:stable
       - name : Publish to npm
@@ -59,7 +59,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-lockfile
       - name: Bump package.json version from tag
-        uses: TypescriptPrime/bump-packagejson-version@72720c4d073ed0c5b9e9393d7334abfe3fabb47c
+        uses: TypescriptPrime/bump-packagejson-version@8b461d950090eae85d58d8a0085bfc993abdea0d
       - name: Build
         run: npm run build:stable
       - name : Publish to npm
@@ -88,7 +88,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-lockfile
       - name: Bump package.json version from tag
-        uses: TypescriptPrime/bump-packagejson-version@72720c4d073ed0c5b9e9393d7334abfe3fabb47c
+        uses: TypescriptPrime/bump-packagejson-version@8b461d950090eae85d58d8a0085bfc993abdea0d
       - name: Build
         run: npm run build:dev
       - name : Publish to npm
