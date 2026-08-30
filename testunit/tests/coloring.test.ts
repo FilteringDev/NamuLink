@@ -1,103 +1,103 @@
-import test from 'ava'
+import { test, expect } from 'vitest'
 import fc from 'fast-check'
 import { ParseHexColor, HexDistance, HexRelativeLuminance, HexContrastRatio, IsReadableTextColor, TextReadabilityScore, IsInsideRegion, RegionCentroidRatio } from '@userscript/coloring.js'
 
-test('ParseHexColor accepts #RGB, #RRGGBB, and no-# forms', T => {
-  T.deepEqual(ParseHexColor('#fff'), [255, 255, 255])
-  T.deepEqual(ParseHexColor('fff'), [255, 255, 255])
-  T.deepEqual(ParseHexColor('#ffffff'), [255, 255, 255])
-  T.deepEqual(ParseHexColor('ffffff'), [255, 255, 255])
-  T.deepEqual(ParseHexColor('#1a2B3c'), [0x1a, 0x2b, 0x3c])
+test('ParseHexColor accepts #RGB, #RRGGBB, and no-# forms', () => {
+  expect(ParseHexColor('#fff')).toEqual([255, 255, 255])
+  expect(ParseHexColor('fff')).toEqual([255, 255, 255])
+  expect(ParseHexColor('#ffffff')).toEqual([255, 255, 255])
+  expect(ParseHexColor('ffffff')).toEqual([255, 255, 255])
+  expect(ParseHexColor('#1a2B3c')).toEqual([0x1a, 0x2b, 0x3c])
 })
 
-test('ParseHexColor rejects malformed input', T => {
-  T.throws(() => ParseHexColor('#zzzzzz'))
-  T.throws(() => ParseHexColor('#12345'))
-  T.throws(() => ParseHexColor(''))
+test('ParseHexColor rejects malformed input', () => {
+  expect(() => ParseHexColor('#zzzzzz')).toThrow()
+  expect(() => ParseHexColor('#12345')).toThrow()
+  expect(() => ParseHexColor('')).toThrow()
 })
 
-test('HexDistance is zero for identical colors and symmetric', T => {
-  T.is(HexDistance('#123456', '#123456'), 0)
-  T.is(HexDistance('#123456', '#abcdef'), HexDistance('#abcdef', '#123456'))
+test('HexDistance is zero for identical colors and symmetric', () => {
+  expect(HexDistance('#123456', '#123456')).toBe(0)
+  expect(HexDistance('#123456', '#abcdef')).toBe(HexDistance('#abcdef', '#123456'))
 })
 
-test('HexDistance matches the Euclidean RGB-cube distance for black/white', T => {
-  T.true(Math.abs(HexDistance('#000000', '#ffffff') - Math.sqrt(255 ** 2 * 3)) < 1e-9)
+test('HexDistance matches the Euclidean RGB-cube distance for black/white', () => {
+  expect(Math.abs(HexDistance('#000000', '#ffffff') - Math.sqrt(255 ** 2 * 3)) < 1e-9).toBe(true)
 })
 
-test('HexRelativeLuminance matches WCAG black and white endpoints', T => {
-  T.is(HexRelativeLuminance('#000'), 0)
-  T.is(HexRelativeLuminance('#fff'), 1)
+test('HexRelativeLuminance matches WCAG black and white endpoints', () => {
+  expect(HexRelativeLuminance('#000')).toBe(0)
+  expect(HexRelativeLuminance('#fff')).toBe(1)
 })
 
-test('HexRelativeLuminance follows human-perception channel weights', T => {
-  T.true(HexRelativeLuminance('#00ff00') > HexRelativeLuminance('#ff0000'))
-  T.true(HexRelativeLuminance('#ff0000') > HexRelativeLuminance('#0000ff'))
+test('HexRelativeLuminance follows human-perception channel weights', () => {
+  expect(HexRelativeLuminance('#00ff00') > HexRelativeLuminance('#ff0000')).toBe(true)
+  expect(HexRelativeLuminance('#ff0000') > HexRelativeLuminance('#0000ff')).toBe(true)
 })
 
-test('HexContrastRatio matches WCAG contrast ratio endpoints', T => {
-  T.is(HexContrastRatio('#000', '#fff'), 21)
-  T.is(HexContrastRatio('#123456', '#123456'), 1)
-  T.is(HexContrastRatio('#fff', '#000'), HexContrastRatio('#000', '#fff'))
+test('HexContrastRatio matches WCAG contrast ratio endpoints', () => {
+  expect(HexContrastRatio('#000', '#fff')).toBe(21)
+  expect(HexContrastRatio('#123456', '#123456')).toBe(1)
+  expect(HexContrastRatio('#fff', '#000')).toBe(HexContrastRatio('#000', '#fff'))
 })
 
-test('IsReadableTextColor applies WCAG AA and AAA text thresholds', T => {
-  T.true(IsReadableTextColor('#767676', '#ffffff'))
-  T.false(IsReadableTextColor('#777777', '#ffffff'))
-  T.true(IsReadableTextColor('#777777', '#ffffff', { LargeText: true }))
-  T.false(IsReadableTextColor('#767676', '#ffffff', { Enhanced: true }))
-  T.true(IsReadableTextColor('#767676', '#ffffff', { LargeText: true, Enhanced: true }))
+test('IsReadableTextColor applies WCAG AA and AAA text thresholds', () => {
+  expect(IsReadableTextColor('#767676', '#ffffff')).toBe(true)
+  expect(IsReadableTextColor('#777777', '#ffffff')).toBe(false)
+  expect(IsReadableTextColor('#777777', '#ffffff', { LargeText: true })).toBe(true)
+  expect(IsReadableTextColor('#767676', '#ffffff', { Enhanced: true })).toBe(false)
+  expect(IsReadableTextColor('#767676', '#ffffff', { LargeText: true, Enhanced: true })).toBe(true)
 })
 
-test('TextReadabilityScore normalizes contrast ratio for ranking text colors', T => {
-  T.is(TextReadabilityScore('#000', '#000'), 0)
-  T.is(TextReadabilityScore('#000', '#fff'), 1)
-  T.true(TextReadabilityScore('#444444', '#ffffff') > TextReadabilityScore('#777777', '#ffffff'))
+test('TextReadabilityScore normalizes contrast ratio for ranking text colors', () => {
+  expect(TextReadabilityScore('#000', '#000')).toBe(0)
+  expect(TextReadabilityScore('#000', '#fff')).toBe(1)
+  expect(TextReadabilityScore('#444444', '#ffffff') > TextReadabilityScore('#777777', '#ffffff')).toBe(true)
 })
 
-test('text readability helpers reject malformed HEX input', T => {
-  T.throws(() => HexRelativeLuminance('#zzzzzz'))
-  T.throws(() => HexContrastRatio('#000', '#12345'))
-  T.throws(() => IsReadableTextColor('', '#fff'))
-  T.throws(() => TextReadabilityScore('#000', ''))
+test('text readability helpers reject malformed HEX input', () => {
+  expect(() => HexRelativeLuminance('#zzzzzz')).toThrow()
+  expect(() => HexContrastRatio('#000', '#12345')).toThrow()
+  expect(() => IsReadableTextColor('', '#fff')).toThrow()
+  expect(() => TextReadabilityScore('#000', '')).toThrow()
 })
 
-test('IsInsideRegion treats a single-point region as an exact match', T => {
+test('IsInsideRegion treats a single-point region as an exact match', () => {
   const Region = ['#808080']
-  T.true(IsInsideRegion('#808080', Region))
-  T.false(IsInsideRegion('#808081', Region))
+  expect(IsInsideRegion('#808080', Region)).toBe(true)
+  expect(IsInsideRegion('#808081', Region)).toBe(false)
 })
 
-test('IsInsideRegion handles a collinear (line) region', T => {
+test('IsInsideRegion handles a collinear (line) region', () => {
   const Region = ['#000000', '#ffffff']
-  T.true(IsInsideRegion('#000000', Region))
-  T.true(IsInsideRegion('#ffffff', Region))
-  T.true(IsInsideRegion('#404040', Region))
-  T.false(IsInsideRegion('#ff0000', Region))
+  expect(IsInsideRegion('#000000', Region)).toBe(true)
+  expect(IsInsideRegion('#ffffff', Region)).toBe(true)
+  expect(IsInsideRegion('#404040', Region)).toBe(true)
+  expect(IsInsideRegion('#ff0000', Region)).toBe(false)
 })
 
-test('IsInsideRegion handles a coplanar (polygon) region', T => {
+test('IsInsideRegion handles a coplanar (polygon) region', () => {
   // Square at B=0: R,G both within [50, 200]
   const Square = ['#323200', '#c83200', '#c8c800', '#32c800']
 
-  T.true(IsInsideRegion('#646400', Square))
-  T.true(IsInsideRegion('#323200', Square))
-  T.false(IsInsideRegion('#0a0a00', Square))
-  T.false(IsInsideRegion('#64640a', Square))
+  expect(IsInsideRegion('#646400', Square)).toBe(true)
+  expect(IsInsideRegion('#323200', Square)).toBe(true)
+  expect(IsInsideRegion('#0a0a00', Square)).toBe(false)
+  expect(IsInsideRegion('#64640a', Square)).toBe(false)
 })
 
-test('IsInsideRegion handles a volumetric (cube) region', T => {
+test('IsInsideRegion handles a volumetric (cube) region', () => {
   const Cube = [
     '#323232', '#c83232', '#32c832', '#3232c8',
     '#c8c832', '#c832c8', '#32c8c8', '#c8c8c8',
   ]
 
-  T.true(IsInsideRegion('#7d7d7d', Cube))
-  T.true(IsInsideRegion('#323232', Cube))
-  T.false(IsInsideRegion('#fafafa', Cube))
+  expect(IsInsideRegion('#7d7d7d', Cube)).toBe(true)
+  expect(IsInsideRegion('#323232', Cube)).toBe(true)
+  expect(IsInsideRegion('#fafafa', Cube)).toBe(false)
 })
 
-test('IsInsideRegion always accepts convex combinations of RegionPoints', T => {
+test('IsInsideRegion always accepts convex combinations of RegionPoints', () => {
   const Cube = [
     '#323232', '#c83232', '#32c832', '#3232c8',
     '#c8c832', '#c832c8', '#32c8c8', '#c8c8c8',
@@ -119,54 +119,54 @@ test('IsInsideRegion always accepts convex combinations of RegionPoints', T => {
     return IsInsideRegion(Hex, Cube)
   }))
 
-  T.pass()
+  expect(true).toBe(true)
 })
 
-test('RegionCentroidRatio is 1 at a single-point region and -1 elsewhere', T => {
+test('RegionCentroidRatio is 1 at a single-point region and -1 elsewhere', () => {
   const Region = ['#808080']
-  T.is(RegionCentroidRatio('#808080', Region), 1)
-  T.is(RegionCentroidRatio('#808081', Region), -1)
+  expect(RegionCentroidRatio('#808080', Region)).toBe(1)
+  expect(RegionCentroidRatio('#808081', Region)).toBe(-1)
 })
 
-test('RegionCentroidRatio uses the midpoint of a collinear hull instead of the point average', T => {
+test('RegionCentroidRatio uses the midpoint of a collinear hull instead of the point average', () => {
   const Region = ['#000000', '#0a0a0a', '#c8c8c8']
 
-  T.is(RegionCentroidRatio('#646464', Region), 1)
-  T.not(RegionCentroidRatio('#464646', Region), 1)
+  expect(RegionCentroidRatio('#646464', Region)).toBe(1)
+  expect(RegionCentroidRatio('#464646', Region)).not.toBe(1)
 })
 
-test('RegionCentroidRatio uses the area centroid of a polygon instead of the point average', T => {
+test('RegionCentroidRatio uses the area centroid of a polygon instead of the point average', () => {
   const Region = ['#000000', '#c80000', '#c8c800', '#00c800', '#006400']
 
-  T.is(RegionCentroidRatio('#646400', Region), 1)
-  T.not(RegionCentroidRatio('#506400', Region), 1)
+  expect(RegionCentroidRatio('#646400', Region)).toBe(1)
+  expect(RegionCentroidRatio('#506400', Region)).not.toBe(1)
 })
 
-test('RegionCentroidRatio uses the divergence-theorem volume centroid of a pyramid', T => {
+test('RegionCentroidRatio uses the divergence-theorem volume centroid of a pyramid', () => {
   const Pyramid = ['#000000', '#c80000', '#c8c800', '#00c800', '#6464c8']
 
-  T.is(RegionCentroidRatio('#646432', Pyramid), 1)
-  T.not(RegionCentroidRatio('#646428', Pyramid), 1)
+  expect(RegionCentroidRatio('#646432', Pyramid)).toBe(1)
+  expect(RegionCentroidRatio('#646428', Pyramid)).not.toBe(1)
 })
 
-test('RegionCentroidRatio ignores repeated points when finding a volume centroid', T => {
+test('RegionCentroidRatio ignores repeated points when finding a volume centroid', () => {
   const Pyramid = ['#000000', '#c80000', '#c8c800', '#00c800', '#6464c8', '#6464c8']
 
-  T.is(RegionCentroidRatio('#646432', Pyramid), 1)
+  expect(RegionCentroidRatio('#646432', Pyramid)).toBe(1)
 })
 
-test('RegionCentroidRatio is 1 at the centroid, 0 on the boundary, and -1 outside a cube region', T => {
+test('RegionCentroidRatio is 1 at the centroid, 0 on the boundary, and -1 outside a cube region', () => {
   const Cube = [
     '#323232', '#c83232', '#32c832', '#3232c8',
     '#c8c832', '#c832c8', '#32c8c8', '#c8c8c8',
   ]
 
-  T.is(RegionCentroidRatio('#7d7d7d', Cube), 1)
-  T.true(Math.abs(RegionCentroidRatio('#c8c8c8', Cube)) < 1e-6)
-  T.is(RegionCentroidRatio('#fafafa', Cube), -1)
+  expect(RegionCentroidRatio('#7d7d7d', Cube)).toBe(1)
+  expect(Math.abs(RegionCentroidRatio('#c8c8c8', Cube)) < 1e-6).toBe(true)
+  expect(RegionCentroidRatio('#fafafa', Cube)).toBe(-1)
 })
 
-test('RegionCentroidRatio decreases monotonically from centroid towards the boundary', T => {
+test('RegionCentroidRatio decreases monotonically from centroid towards the boundary', () => {
   const Cube = [
     '#323232', '#c83232', '#32c832', '#3232c8',
     '#c8c832', '#c832c8', '#32c8c8', '#c8c8c8',
@@ -176,7 +176,7 @@ test('RegionCentroidRatio decreases monotonically from centroid towards the boun
   const Middle = RegionCentroidRatio('#b5b5b5', Cube)
   const Far = RegionCentroidRatio('#c3c3c3', Cube)
 
-  T.true(Near > Middle)
-  T.true(Middle > Far)
-  T.true(Far > 0)
+  expect(Near > Middle).toBe(true)
+  expect(Middle > Far).toBe(true)
+  expect(Far > 0).toBe(true)
 })

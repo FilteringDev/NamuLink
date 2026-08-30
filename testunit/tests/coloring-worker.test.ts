@@ -1,4 +1,4 @@
-import test from 'ava'
+import { test, expect } from 'vitest'
 import * as Path from 'node:path'
 import * as ESBuild from 'esbuild'
 import { IsInsideRegion, RegionCentroidRatio } from '@userscript/coloring.js'
@@ -30,12 +30,12 @@ function RunDirectly(Items: ColoringBatchItem[]): ColoringBatchResultValue[] {
     : RegionCentroidRatio(Item.ComparePointHex, Item.RegionPoints))
 }
 
-test('coloring batch logic is deterministic when called directly (no worker)', T => {
+test('coloring batch logic is deterministic when called directly (no worker)', () => {
   const Items = BuildDataset()
-  T.deepEqual(RunDirectly(Items), RunDirectly(Items))
+  expect(RunDirectly(Items)).toEqual(RunDirectly(Items))
 })
 
-test('CreateColoringWorkerPool spreads a batch across worker_threads and matches direct-call results', async T => {
+test('CreateColoringWorkerPool spreads a batch across worker_threads and matches direct-call results', async () => {
   const EntryPath = Path.resolve(import.meta.dirname, '../../userscript/source/coloring-worker.ts')
   const BuildResult = await ESBuild.build({
     entryPoints: [EntryPath],
@@ -50,7 +50,7 @@ test('CreateColoringWorkerPool spreads a batch across worker_threads and matches
   try {
     const Items = BuildDataset()
     const Results = await Pool.RunBatch(Items)
-    T.deepEqual(Results, RunDirectly(Items))
+    expect(Results).toEqual(RunDirectly(Items))
   } finally {
     Pool.Terminate()
   }
