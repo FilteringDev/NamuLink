@@ -1,5 +1,5 @@
 import { IsInsideRegion, RegionCentroidRatio } from './coloring.js'
-import { GetWorkerPort } from './worker-runtime.js'
+import { GetWorkerPort } from '../worker-runtime.js'
 import type { ColoringBatchItem, ColoringBatchRequest, ColoringBatchResponse, ColoringBatchResultValue } from './coloring-types.js'
 
 function RunItem(Item: ColoringBatchItem): ColoringBatchResultValue {

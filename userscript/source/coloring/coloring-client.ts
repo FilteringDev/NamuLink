@@ -1,4 +1,4 @@
-import { CreateIsomorphicWorker, type WorkerLike } from './worker-runtime.js'
+import { CreateIsomorphicWorker, type WorkerLike } from '../worker-runtime.js'
 import type { ColoringBatchItem, ColoringBatchRequest, ColoringBatchResponse, ColoringBatchResultValue } from './coloring-types.js'
 
 export type ColoringWorkerPool = {
