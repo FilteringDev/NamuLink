@@ -1,6 +1,6 @@
 import { test, expect } from 'vitest'
 import fc from 'fast-check'
-import { ParseHexColor, HexDistance, HexRelativeLuminance, HexContrastRatio, IsReadableTextColor, TextReadabilityScore, IsInsideRegion, RegionCentroidRatio } from '@userscript/coloring.js'
+import { ParseHexColor, HexDistance, HexRelativeLuminance, HexContrastRatio, IsReadableTextColor, TextReadabilityScore, IsInsideRegion, RegionCentroidRatio } from '@userscript/coloring/coloring.js'
 
 test('ParseHexColor accepts #RGB, #RRGGBB, and no-# forms', () => {
   expect(ParseHexColor('#fff')).toEqual([255, 255, 255])

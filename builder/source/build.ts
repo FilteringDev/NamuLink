@@ -112,7 +112,7 @@ export async function Build(OptionsParam?: BuildOptions): Promise<void> {
 
   // Bundled separately (not inlined via the virtual entry) so it can be embedded as a string and run inside a Worker/worker_threads.
   const ColoringWorkerCode = await ESBuild.build({
-    entryPoints: [Path.resolve(ProjectRoot, 'userscript', 'source', 'coloring-worker.ts')],
+    entryPoints: [Path.resolve(ProjectRoot, 'userscript', 'source', 'coloring', 'coloring-worker.ts')],
     bundle: true,
     minify: Options.Minify,
     write: false,
