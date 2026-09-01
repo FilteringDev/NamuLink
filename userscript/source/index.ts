@@ -9,7 +9,7 @@
  */
 
 type unsafeWindow = typeof window
-// eslint-disable-next-line @typescript-eslint/naming-convention
+// oxlint-disable-next-line namulink/pascal-case
 declare const unsafeWindow: unsafeWindow
 
 import { MatchValueSchema, SetValueAtPath, type ValueSchema } from './startrick.js'

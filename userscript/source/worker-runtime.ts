@@ -3,14 +3,14 @@ type NodeMessagePort = {
   on(EventName: 'message', Listener: (Value: unknown) => void): void
   postMessage(Value: unknown): void
 }
-// eslint-disable-next-line @typescript-eslint/naming-convention -- must match Node's worker_threads Worker options shape
+// oxlint-disable-next-line namulink/pascal-case -- must match Node's worker_threads Worker options shape
 type NodeWorkerConstructor = new (FileNameOrCode: string, Options?: { eval?: boolean }) => {
   on(EventName: 'message' | 'error', Listener: (Value: unknown) => void): void
   postMessage(Value: unknown): void
   terminate(): Promise<number>
 }
 type NodeWorkerThreadsModule = {
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- must match Node's worker_threads export name
+  // oxlint-disable-next-line namulink/pascal-case -- must match Node's worker_threads export name
   parentPort: NodeMessagePort | null
   Worker: NodeWorkerConstructor
 }
@@ -45,7 +45,7 @@ export async function GetWorkerPort(): Promise<PortLike> {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- must match Node's worker_threads export name
+  // oxlint-disable-next-line namulink/pascal-case -- must match Node's worker_threads export name
   const { parentPort } = await ImportWorkerThreads()
   if (!parentPort) throw new Error('parentPort is unavailable outside a worker_threads worker')
 
