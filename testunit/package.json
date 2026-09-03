@@ -1,0 +1,20 @@
+{
+  "name": "@filteringdev/namulink-testunit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "tsc --noEmit && oxlint --type-aware **/*.ts",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.1",
+    "@types/web": "^0.0.345",
+    "@violentmonkey/types": "^0.3.3",
+    "esbuild": "^0.28.0",
+    "fast-check": "^4.9.0",
+    "oxlint": "^1.79.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "typescript": "^7.0.2",
+    "vitest": "^3.2.4"
+  }
+}

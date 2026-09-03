@@ -1,11 +1,12 @@
 {
   "extends": "../tsconfig.json",
   "include": [
-    "source/**/*.ts",
+    "tests/**/*.test.ts",
     "VM.d.ts"
   ],
   "compilerOptions": {
-    "rootDir": "./",
+    "types": ["node"],
+    "rootDir": "../",
     "outDir": "../dist/",
     "declaration": true,
     "skipLibCheck": true

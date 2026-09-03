@@ -9,196 +9,97 @@
  */
 
 type unsafeWindow = typeof window
-// eslint-disable-next-line @typescript-eslint/naming-convention
+// oxlint-disable-next-line namulink/pascal-case
 declare const unsafeWindow: unsafeWindow
+
+import { MatchValueSchema, SetValueAtPath, type ValueSchema } from './startrick.js'
 
 const Win = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window
 const UserscriptName = 'NamuLink'
 
-import { AttachVueSettledEvents } from './vuejsawait.js'
-import { WaitForElement } from './dom-await.js'
-import { CreateOcrWorkerClient } from './ocr-client.js'
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-declare const __OCR_WORKER_CODE__: string
-
 // BUILD:START
 
-const OriginalReflectApply = Win.Reflect.apply
+const PLInitTracking = /\[?\[\[\[( *null *,)? *\\? *" *! *\/jump\/[a-zA-Z0-9\/=\\+]+ *\\? *" *, *.+[\[\[ *null *, *\\? *" *! *\/jump\/[a-zA-Z0-9\/=\\+]+ *\\? *" *, *.+\/\/i\.namu.wiki\/i\//
 
-const PL2PromiseThenRegexs: RegExp[][] = [[
-  /function *[A-Za-z0-9]+ *\([A-Za-z0-9]+ * *\) *{ *function *[A-Za-z0-9]+ *\( *[a-zA-Z]+ *, *[A-Za-z]+ *\) *{ *return *[A-Za-z0-9]+ *\( */,
-  /{ *return *[A-Za-z0-9]+ *\( *[a-zA-Z]+[- ]*0x[a-f0-9]+ *, *[a-zA-Z]+ *\) *; *\} *[A-Za-z0-9]+ *\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+/,
-  /\( *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *, *[A-Za-z0-9]+ *\( *0x[a-f0-9]+ *, *0x[a-f0-9]+ *\) *, *[A-Za-z0-9]+ *\) *;/
-]]
+const PLSSRImage = /\/\/i\.namu\.wiki\/i\/[a-zA-Z0-9-_]+\.[a-z]{3,4}/
 
-Win.Promise.prototype.then = new Proxy(Win.Promise.prototype.then, {
-  apply(Target: typeof Promise.prototype.then, ThisArg: Promise<unknown>, Args: Parameters<typeof Promise.prototype.then>) {
-    if (typeof Args[0] !== 'function' || typeof Args[1] !== 'function') {
-      return OriginalReflectApply(Target, ThisArg, Args)
-    }
-    const Stringified: [string, string] = [String(Args[0]), String(Args[1])]
-    if (Stringified.every(Str => PL2PromiseThenRegexs.filter(Regexs => Regexs.filter(Regex => Regex.test(Str)).length === Regexs.length).length === 1)) {
-      console.debug(`[${UserscriptName}] Detected PL2 Promise.then`, Stringified, Args)
-      setTimeout(() => {
-        let Targeted = [...document.querySelectorAll('#app div[class] div[class] ~ div[class]')].filter(Ele => Ele instanceof HTMLElement)
-        Targeted = Targeted.filter(Ele => parseFloat(getComputedStyle(Ele).getPropertyValue('margin-bottom')) >= 12.5)
-        Targeted = Targeted.filter(Ele => Ele.innerText.trim().length === 0)
-        Targeted = Targeted.filter(Ele => [...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement).some(Child => {
-          const Height = Child.getBoundingClientRect().height
-          return Height > 0 && Height <= 5
-        }))
-        console.debug(`[${UserscriptName}] Detected PL2 Promise.then Targeted`, Targeted)
-        Targeted.forEach(Ele => {
-          Ele.style.setProperty('display', 'none', 'important')
+Win.Reflect.set = new Proxy(Win.Reflect.set, {
+  apply(Target: typeof Reflect.set, ThisArg: Set<unknown>, ArgArray: Parameters<typeof Reflect.set>) {
+    // Property names are randomized, so only the set of values (regardless of key/order) is checked.
+    const PLInitSchema = [
+      /[0-9]{8,12}/,
+      /[0-9]{8,12}/,
+      /[0-9]{8,12}/,
+      /[0-9]{8,12}/,
+      /[0-9]{1,3}\.[0-9]{12,20}/,
+      /[a-zA-Z0-9\/=\\+]{20,}/,
+      /^[01]$/,
+      /^[01]$/,
+      /^[01]$/,
+      /^[01]$/,
+      /^[01]$/,
+      PLInitTracking
+    ]
+
+    const PLSSRSchema: ValueSchema[] = [[
+      PLSSRImage,
+      PLSSRImage,
+      PLSSRImage,
+      PLSSRImage,
+      PLSSRImage
+    ], [[
+      /[a-z0-9]{4,6}/
+    ], [
+      /[a-z0-9]{4,6}/
+    ]], [
+      PLSSRImage,
+      PLSSRImage
+    ]]
+
+    for (let I = 0; I < ArgArray.length; I++) {
+      const Arg = ArgArray[I]
+
+      let Matches: string[] = MatchValueSchema(Arg, PLInitSchema, { Exact: false })
+      if (Matches.length !== 0) {
+        console.debug(`${UserscriptName} detected a potential PLSchema match at argument index ${I} and matches:`, Matches, Arg)
+        let ModifiedArg = ArgArray.map((Value, Index) => {
+          if (Index === I) return SetValueAtPath(Value, Matches[0], (OldValue: unknown, Key: string | number | undefined, Path: string) => {
+            switch (true) {
+              case typeof OldValue === 'string' && OldValue === '1' && Key === 'enable_ads':
+                return '0'
+              case typeof OldValue === 'number' && OldValue === 1 && Key === 'enable_ads':
+                return 0
+              case typeof OldValue === 'string' && PLInitTracking.test(OldValue):
+                return ''
+              case typeof OldValue === 'string' && /[a-zA-Z0-9\/=\\+]{20,}/.test(OldValue):
+                return ''
+              default:
+                return OldValue
+            }
+          })
+          return Value
         })
-      }, 250)
-      return
-    }
-    return OriginalReflectApply(Target, ThisArg, Args)
-  }
-})
+        return Reflect.apply(Target, ThisArg, ModifiedArg)
+      }
 
-const ArticleHTMLElement = await WaitForElement('#app', Win.document)
-const EventName = 'vue:settled'
-const ChangeEventName = 'vue:change'
-const UrlChangeEventName = 'vue:url-changed'
-const UrlBlackBlankEventName = 'vue:black-blank'
-AttachVueSettledEvents(ArticleHTMLElement, {
-  QuietMs: 75,
-  EventName: EventName,
-  ChangeEventName: ChangeEventName,
-  UrlChange: UrlChangeEventName,
-  BlackBlank: UrlBlackBlankEventName
-})
-
-const OCRInstance = CreateOcrWorkerClient(Win, new Worker(URL.createObjectURL(new Blob([__OCR_WORKER_CODE__], { type: 'application/javascript' }))))
-
-async function ExecuteOCR(Targeted: HTMLElement[]) {
-  const NextTargeted = []
-    for (const Parent of Targeted) {
-      const CandidateChildren = [...Parent.querySelectorAll('*')]
-        .filter(Child => Child instanceof HTMLElement)
-        .filter(Child =>
-          Child instanceof HTMLImageElement ||
-          getComputedStyle(Child).backgroundImage !== 'none'
-        ).filter(Child => parseFloat(getComputedStyle(Child).getPropertyValue('width')) >= 5 && parseFloat(getComputedStyle(Child).getPropertyValue('height')) >= 5)
-        .filter(Child => parseFloat(getComputedStyle(Child).getPropertyValue('width')) <= 50 && parseFloat(getComputedStyle(Child).getPropertyValue('height')) <= 50)
-      let MatchedCount = 0
-      for (const Child of CandidateChildren) {
-        const Result = await OCRInstance.DetectFromElement(Child, {
-          ScoreThreshold: 0.32
+      Matches = MatchValueSchema(Arg, PLSSRSchema, { Exact: false })
+      if (Matches.length !== 0) {
+        console.debug(`${UserscriptName} detected a potential PLSSR schema match at argument index ${I} and matches:`, Matches, Arg)
+        let ModifiedArg = ArgArray.map((Value, Index) => {
+          if (Index === I) return SetValueAtPath(Value, Matches[0], (OldValue: unknown, Key: string | number | undefined, Path: string) => {
+            switch (true) {
+              case typeof OldValue === 'boolean':
+                return false
+              default:
+                return undefined
+            }
+          })
+          return Value
         })
-        if (Result !== null) {
-          MatchedCount += 1
-        }
-        if (MatchedCount >= 1) {
-          NextTargeted.push(Parent)
-          break
-        }
+        return Reflect.apply(Target, ThisArg, ModifiedArg)
       }
     }
-    return NextTargeted
-}
 
-function AllParents(Ele: HTMLElement): Set<HTMLElement> {
-  let SetHTMLElement = new Set([Ele])
-  for (let I = 0;; I++) {
-    let Upper = [...SetHTMLElement][I].parentElement
-    if (Upper === null) {
-      break
-    }
-    SetHTMLElement.add(Upper)
+    return Reflect.apply(Target, ThisArg, ArgArray)
   }
-  return SetHTMLElement
-}
-
-async function Handler(EventParameter: Event) {
-  let Targeted = [...document.querySelectorAll('#app div[class] div[class] ~ div[class]')].filter(Ele => Ele instanceof HTMLElement)
-  Targeted = Targeted.filter(Ele =>
-    parseFloat(getComputedStyle(Ele).getPropertyValue('padding-top')) >= 20 ||
-    parseFloat(getComputedStyle(Ele).getPropertyValue('margin-top')) >= 20 ||
-    parseFloat(getComputedStyle(Ele).getPropertyValue('margin-bottom')) >= 12.5
-  )
-  Targeted = Targeted.filter(Ele => {
-    let Children = [...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement)
-    // non-HTMLTableElement
-    if (Children.filter(Child => 
-      parseFloat(getComputedStyle(Child).getPropertyValue('padding-top')) >= 5 &&
-      parseFloat(getComputedStyle(Child).getPropertyValue('border-bottom-width')) >= 0.1
-    ).length === 1) return true
-    // HTMLTableElement
-    return Children.filter(Child => (Child instanceof HTMLTableElement || Child instanceof HTMLTableCellElement) &&
-      parseFloat(getComputedStyle(Child).getPropertyValue('padding-top')) >= 5 && parseFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')) >= 5).length >= 2
-  })
-  Targeted = Targeted.filter(Ele => {
-    let Children = [...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement)
-    return !Children.some(Child => {
-      return parseFloat(getComputedStyle(Child).getPropertyValue('margin-bottom')) >= 10 && parseFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')) >= 1 && parseFloat(getComputedStyle(Child).getPropertyValue('padding-top')) >= 1 &&
-      parseFloat(getComputedStyle(Child).getPropertyValue('border-top-width')) >= 0.25 && parseFloat(getComputedStyle(Child).getPropertyValue('border-bottom-width')) >= 0.25
-    })
-  })
-  Targeted = Targeted.filter(Ele => {
-    let Children = [...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement)
-    Children = Children.filter(Child => parseFloat(getComputedStyle(Child).getPropertyValue('padding-right')) >= 10 && parseFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')) >= 10)
-    Children = Children.filter(Child => parseFloat(getComputedStyle(Child).getPropertyValue('margin-left')) >= 2.5)
-    return Children.length === 0
-  })
-  Targeted = Targeted.filter(Ele => {
-    if (Ele.getBoundingClientRect().width < 500 && Win.document.body.getBoundingClientRect().width > 500) return false
-    let Children = [...Ele.querySelectorAll('*[style]')].filter(Child => Child instanceof HTMLElement && Child.style.length > 0)
-    return Children.filter(Child => {
-      if (!(Child instanceof HTMLElement)) return false
-      const ComputedStyle = getComputedStyle(Child)
-      const MissingCount = [...Child.style].filter(Property => {
-        const InlineValue = Child.style.getPropertyValue(Property).trim()
-        const ComputedValue = ComputedStyle.getPropertyValue(Property).trim()
-        return InlineValue !== ComputedValue
-      }).length
-      return MissingCount <= 1
-    }).length < 10
-  })
-  Targeted = await ExecuteOCR(Targeted)
-  Targeted.forEach(Ele => Targeted.push(...new Set([...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement))))
-  Targeted = [...new Set(Targeted)]
-  let RealTargeted = Targeted.filter(Ele => parseFloat(getComputedStyle(Ele).getPropertyValue('padding-left')) >= 5 && parseFloat(getComputedStyle(Ele).getPropertyValue('border-right-width')) >= 0.1)
-  console.debug(`[${UserscriptName}] ${EventParameter.type} RealTargeted`, RealTargeted, EventParameter)
-  RealTargeted.forEach(Ele => {
-    Ele.style.setProperty('display', 'none', 'important')
-  })
-  let RealTabletTargeted = Targeted.filter(Ele => {
-    if (!(Ele instanceof HTMLElement) || !(Ele instanceof HTMLTableElement)) return false
-    let Children = [...Ele.querySelectorAll('*')].filter(Child => Child instanceof HTMLElement)
-    return Children.some(Child => parseFloat(getComputedStyle(Child).getPropertyValue('padding-top')) >= 5 && parseFloat(getComputedStyle(Child).getPropertyValue('padding-bottom')) >= 5)
-  })
-  console.debug(`[${UserscriptName}] ${EventParameter.type} RealTabletTargeted`, RealTabletTargeted, EventParameter)
-  RealTabletTargeted.forEach(Ele => {
-    Ele.style.setProperty('display', 'none', 'important')
-  })
-
-  // leftover
-  const PlaceHolderCandidated: Set<HTMLElement> = new Set([...RealTargeted, ...RealTabletTargeted])
-  PlaceHolderCandidated.forEach(PlaceHolder => {
-    let Parents = [...AllParents(PlaceHolder)].filter(Ele => Ele.innerText.trim().length === 0)
-    Parents.forEach(Ele => PlaceHolderCandidated.add(Ele))
-  })
-  console.debug(`[${UserscriptName}] ${EventParameter.type} PlaceHolderCandidated`, PlaceHolderCandidated, EventParameter);
-  [...PlaceHolderCandidated].forEach(Ele => {
-    Ele.style.setProperty('display', 'none', 'important')
-  })
-}
-
-ArticleHTMLElement.addEventListener('vue:settled', (EventParameter) => Handler(EventParameter))
-ArticleHTMLElement.addEventListener('vue:url-changed', (EventParameter) => setTimeout(() => Handler(EventParameter), 250))
-ArticleHTMLElement.addEventListener('vue:black-blank', (EventParameter) => setTimeout(() => Handler(EventParameter), 1500))
-
-// init Naver Nanum fonts
-const FontAddr = [
-  'https://fonts.googleapis.com/css2?family=Nanum Gothic&display=swap',
-]
-FontAddr.forEach(Addr => {
-  const Link = Win.document.createElement('link')
-  Link.rel = 'stylesheet'
-  Link.href = Addr
-  Win.document.head.appendChild(Link)
 })
