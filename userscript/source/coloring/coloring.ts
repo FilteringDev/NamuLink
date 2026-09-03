@@ -189,9 +189,9 @@ function ComputeFaces3D(Points: RGB[]): Face[] {
         if (!UniquePoints.every(Point => Dot(Normal, Point) <= OutwardOffset + Epsilon)) continue
 
         const Vertices = UniquePoints.filter(Point => Math.abs(Dot(Normal, Point) - OutwardOffset) <= Epsilon)
-  const FaceKey = Vertices.map(PointKey).toSorted().join('|')
-  if (FaceKeys.has(FaceKey)) continue
-  FaceKeys.add(FaceKey)
+        const FaceKey = Vertices.map(PointKey).toSorted().join('|')
+        if (FaceKeys.has(FaceKey)) continue
+        FaceKeys.add(FaceKey)
 
         const FaceCenter = PointAverage(Vertices)
         const AxisA = Normalize(Subtract(Vertices[0], FaceCenter))
