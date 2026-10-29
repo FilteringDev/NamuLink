@@ -6,10 +6,10 @@
     "lint": "tsc --noEmit && oxlint --type-aware **/*.ts"
   },
   "devDependencies": {
-    "@types/web": "^0.0.345",
-    "@violentmonkey/types": "^0.3.3",
-    "oxlint": "^1.79.0",
-    "oxlint-tsgolint": "^7.0.2001"
+    "@types/web": "^0.0.359",
+    "@violentmonkey/types": "^0.3.4",
+    "oxlint": "^1.90.0",
+    "oxlint-tsgolint": "^7.0.2005"
   },
   "dependencies": {
     "typescript": "^7.0.2"

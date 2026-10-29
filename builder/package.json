@@ -10,18 +10,18 @@
   },
   "devDependencies": {
     "@npmcli/package-json": "^8.0.0",
-    "@types/node": "^24.12.4",
+    "@types/node": "^26.6.5",
     "@types/npmcli__package-json": "^4.0.4",
-    "@typescriptprime/parsing": "^2.0.1",
-    "chokidar": "^5.0.0",
-    "esbuild": "^0.28.0",
-    "memfs": "^4.57.2",
-    "oxlint": "^1.79.0",
-    "oxlint-tsgolint": "^7.0.2001",
-    "tldts": "^7.1.2",
+    "@typescriptprime/parsing": "^2.0.2",
+    "chokidar": "^6.0.0",
+    "esbuild": "^0.28.2",
+    "memfs": "^4.80.0",
+    "oxlint": "^1.90.0",
+    "oxlint-tsgolint": "^7.0.2005",
+    "tldts": "^7.4.19",
     "ts-morph": "^28.0.0",
-    "tsx": "^4.22.3",
+    "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   }
 }
