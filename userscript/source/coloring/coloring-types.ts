@@ -1,9 +1,10 @@
-export type ColoringOperation = 'IsInsideRegion' | 'RegionCentroidRatio'
+export type ColoringOperation = 'IsInsideRegion' | 'RegionCentroidRatio' | 'HexDistance'
 
 export type ColoringBatchItem = {
   Op: ColoringOperation
   ComparePointHex: string
   RegionPoints: string[]
+  TargetPointHex?: string
 }
 
 export type ColoringBatchResultValue = boolean | number

@@ -1,11 +1,11 @@
-import { IsInsideRegion, RegionCentroidRatio } from './coloring.js'
+import { HexDistance, IsInsideRegion, RegionCentroidRatio } from './coloring.js'
 import { GetWorkerPort } from '../worker-runtime.js'
 import type { ColoringBatchItem, ColoringBatchRequest, ColoringBatchResponse, ColoringBatchResultValue } from './coloring-types.js'
 
 function RunItem(Item: ColoringBatchItem): ColoringBatchResultValue {
-  return Item.Op === 'IsInsideRegion'
-    ? IsInsideRegion(Item.ComparePointHex, Item.RegionPoints)
-    : RegionCentroidRatio(Item.ComparePointHex, Item.RegionPoints)
+  if (Item.Op === 'IsInsideRegion') return IsInsideRegion(Item.ComparePointHex, Item.RegionPoints)
+  if (Item.Op === 'RegionCentroidRatio') return RegionCentroidRatio(Item.ComparePointHex, Item.RegionPoints)
+  return HexDistance(Item.ComparePointHex, Item.TargetPointHex ?? Item.RegionPoints[0] ?? '')
 }
 
 void (async () => {

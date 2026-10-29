@@ -37,6 +37,64 @@ export function ParseHexColor(Hex: string): RGB {
   ]
 }
 
+function ParseRgbChannel(Value: string, Original: string): number {
+  const Trimmed = Value.trim()
+  if (Trimmed.endsWith('%')) {
+    const Percent = Number(Trimmed.slice(0, -1).trim())
+    if (!Number.isFinite(Percent) || Percent < 0 || Percent > 100) throw new RangeError(`Invalid rgb color: ${Original}`)
+    return Math.round((Percent / 100) * 255)
+  }
+
+  const Channel = Number(Trimmed)
+  if (!Number.isFinite(Channel) || Channel < 0 || Channel > 255) throw new RangeError(`Invalid rgb color: ${Original}`)
+  return Math.round(Channel)
+}
+
+function ParseAlphaChannel(Value: string, Original: string): void {
+  const Trimmed = Value.trim()
+  const Alpha = Trimmed.endsWith('%')
+    ? Number(Trimmed.slice(0, -1).trim())
+    : Number(Trimmed)
+  const Max = Trimmed.endsWith('%') ? 100 : 1
+  if (!Number.isFinite(Alpha) || Alpha < 0 || Alpha > Max) throw new RangeError(`Invalid rgb color: ${Original}`)
+}
+
+function ParseRgbColor(Color: string): RGB {
+  const FunctionMatch = Color.trim().match(/^rgba?\s*\(\s*(.+?)\s*\)$/i)
+  if (!FunctionMatch) throw new RangeError(`Invalid color: ${Color}`)
+  const Original = Color
+  const Inner = FunctionMatch[1]
+
+  if (Inner.includes('/')) {
+    const [RgbPart, AlphaPart] = Inner.split('/')
+    if (AlphaPart === undefined || RgbPart.includes(',')) throw new RangeError(`Invalid rgb color: ${Original}`)
+    const Channels = RgbPart.trim().split(/\s+/).filter(Part => Part.length > 0)
+    if (Channels.length !== 3) throw new RangeError(`Invalid rgb color: ${Original}`)
+    ParseAlphaChannel(AlphaPart, Original)
+    return [ParseRgbChannel(Channels[0], Original), ParseRgbChannel(Channels[1], Original), ParseRgbChannel(Channels[2], Original)]
+  }
+
+  if (Inner.includes(',')) {
+    const Parts = Inner.split(',').map(Part => Part.trim())
+    if (Parts.length !== 3 && Parts.length !== 4) throw new RangeError(`Invalid rgb color: ${Original}`)
+    if (Parts.some(Part => Part.length === 0)) throw new RangeError(`Invalid rgb color: ${Original}`)
+    if (Parts.length === 4) ParseAlphaChannel(Parts[3], Original)
+    return [ParseRgbChannel(Parts[0], Original), ParseRgbChannel(Parts[1], Original), ParseRgbChannel(Parts[2], Original)]
+  }
+
+  const Channels = Inner.split(/\s+/).filter(Part => Part.length > 0)
+  if (Channels.length !== 3) throw new RangeError(`Invalid rgb color: ${Original}`)
+  return [ParseRgbChannel(Channels[0], Original), ParseRgbChannel(Channels[1], Original), ParseRgbChannel(Channels[2], Original)]
+}
+
+/** Parses HEX (`#RGB`/`#RRGGBB`) or `rgb()`/`rgba()` (comma or space syntax, alpha is ignored) into 0-255 RGB components. */
+export function ParseCssColor(Color: string): RGB {
+  const Trimmed = Color.trim()
+  if (Trimmed.toLowerCase() === 'transparent') return [0, 0, 0]
+  if (/^rgba?\s*\(/i.test(Trimmed)) return ParseRgbColor(Trimmed)
+  return ParseHexColor(Trimmed)
+}
+
 function Subtract(A: RGB, B: RGB): RGB {
   return [A[0] - B[0], A[1] - B[1], A[2] - B[2]]
 }
@@ -75,9 +133,9 @@ function PointAverage(Points: RGB[]): RGB {
   return Scale(Sum, 1 / Points.length)
 }
 
-/** Euclidean RGB-cube distance between two HEX colors (0 = identical, ~441.67 = black/white). */
-export function HexDistance(HexA: string, HexB: string): number {
-  return Length(Subtract(ParseHexColor(HexA), ParseHexColor(HexB)))
+/** Euclidean RGB-cube distance between two CSS colors (0 = identical, ~441.67 = black/white). */
+export function HexDistance(ColorA: string, ColorB: string): number {
+  return Length(Subtract(ParseCssColor(ColorA), ParseCssColor(ColorB)))
 }
 
 function LinearizeSrgbChannel(Channel: number): number {
@@ -85,34 +143,34 @@ function LinearizeSrgbChannel(Channel: number): number {
   return Normalized <= 0.04045 ? Normalized / 12.92 : ((Normalized + 0.055) / 1.055) ** 2.4
 }
 
-/** WCAG relative luminance for a HEX color (0 = black, 1 = white). */
-export function HexRelativeLuminance(Hex: string): number {
-  const [Red, Green, Blue] = ParseHexColor(Hex)
+/** WCAG relative luminance for a CSS color (0 = black, 1 = white). */
+export function HexRelativeLuminance(Color: string): number {
+  const [Red, Green, Blue] = ParseCssColor(Color)
   return 0.2126 * LinearizeSrgbChannel(Red)
     + 0.7152 * LinearizeSrgbChannel(Green)
     + 0.0722 * LinearizeSrgbChannel(Blue)
 }
 
 /** WCAG contrast ratio between text and background colors (1 = identical, 21 = black/white). */
-export function HexContrastRatio(TextHex: string, BackgroundHex: string): number {
-  const TextLuminance = HexRelativeLuminance(TextHex)
-  const BackgroundLuminance = HexRelativeLuminance(BackgroundHex)
+export function HexContrastRatio(TextColor: string, BackgroundColor: string): number {
+  const TextLuminance = HexRelativeLuminance(TextColor)
+  const BackgroundLuminance = HexRelativeLuminance(BackgroundColor)
   const Lighter = Math.max(TextLuminance, BackgroundLuminance)
   const Darker = Math.min(TextLuminance, BackgroundLuminance)
   return (Lighter + 0.05) / (Darker + 0.05)
 }
 
 /** Whether a text/background color pair satisfies WCAG contrast guidance. */
-export function IsReadableTextColor(TextHex: string, BackgroundHex: string, Options: TextReadabilityOptions = {}): boolean {
+export function IsReadableTextColor(TextColor: string, BackgroundColor: string, Options: TextReadabilityOptions = {}): boolean {
   const RequiredRatio = Options.Enhanced
     ? Options.LargeText ? 4.5 : 7
     : Options.LargeText ? 3 : 4.5
-  return HexContrastRatio(TextHex, BackgroundHex) >= RequiredRatio
+  return HexContrastRatio(TextColor, BackgroundColor) >= RequiredRatio
 }
 
 /** Normalized text readability score based on WCAG contrast ratio (0 = identical, 1 = black/white). */
-export function TextReadabilityScore(TextHex: string, BackgroundHex: string): number {
-  return (HexContrastRatio(TextHex, BackgroundHex) - 1) / 20
+export function TextReadabilityScore(TextColor: string, BackgroundColor: string): number {
+  return (HexContrastRatio(TextColor, BackgroundColor) - 1) / 20
 }
 
 // Gram-Schmidt against Points[0]; Basis.length is the affine rank (0-3) of the point set.
@@ -291,32 +349,32 @@ function ComputeFacets(Points: RGB[], AffineBasisResult: AffineBasis): Facet[] {
   return ComputeFaces3D(Points)
 }
 
-/** Whether ComparePointHex lies within (or on the boundary of) the convex hull of RegionPoints. */
-export function IsInsideRegion(ComparePointHex: string, RegionPoints: string[]): boolean {
+/** Whether ComparePoint lies within (or on the boundary of) the convex hull of RegionPoints. */
+export function IsInsideRegion(ComparePoint: string, RegionPoints: string[]): boolean {
   if (RegionPoints.length === 0) throw new RangeError('RegionPoints must contain at least one color')
 
-  const Points = RegionPoints.map(ParseHexColor)
-  const ComparePoint = ParseHexColor(ComparePointHex)
+  const Points = RegionPoints.map(ParseCssColor)
+  const ComparePointRgb = ParseCssColor(ComparePoint)
   const AffineBasisResult = DetectAffineBasis(Points)
 
-  if (ResidualDistance(ComparePoint, AffineBasisResult) > Epsilon) return false
+  if (ResidualDistance(ComparePointRgb, AffineBasisResult) > Epsilon) return false
 
   const Facets = ComputeFacets(Points, AffineBasisResult)
-  return Facets.every(Facet => Dot(Facet.Normal, ComparePoint) <= Facet.Offset + Epsilon)
+  return Facets.every(Facet => Dot(Facet.Normal, ComparePointRgb) <= Facet.Offset + Epsilon)
 }
 
 /** 1 at the convex hull's geometric centroid, 0 on its boundary, -1 outside; scales linearly in between along the ray from the centroid. */
-export function RegionCentroidRatio(ComparePointHex: string, RegionPoints: string[]): number {
+export function RegionCentroidRatio(ComparePoint: string, RegionPoints: string[]): number {
   if (RegionPoints.length === 0) throw new RangeError('RegionPoints must contain at least one color')
 
-  const Points = RegionPoints.map(ParseHexColor)
-  const ComparePoint = ParseHexColor(ComparePointHex)
+  const Points = RegionPoints.map(ParseCssColor)
+  const ComparePointRgb = ParseCssColor(ComparePoint)
   const AffineBasisResult = DetectAffineBasis(Points)
 
-  if (ResidualDistance(ComparePoint, AffineBasisResult) > Epsilon) return -1
+  if (ResidualDistance(ComparePointRgb, AffineBasisResult) > Epsilon) return -1
 
   const RegionCentroid = GeometricCentroid(Points, AffineBasisResult)
-  const Direction = Subtract(ComparePoint, RegionCentroid)
+  const Direction = Subtract(ComparePointRgb, RegionCentroid)
   if (Length(Direction) < Epsilon) return 1
 
   const Facets = ComputeFacets(Points, AffineBasisResult)
