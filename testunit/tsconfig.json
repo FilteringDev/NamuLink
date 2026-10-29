@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "include": [
+    "tests/**/*.test.ts",
+    "VM.d.ts"
+  ],
+  "compilerOptions": {
+    "types": ["node"],
+    "rootDir": "../",
+    "outDir": "../dist/",
+    "declaration": true,
+    "skipLibCheck": true
+  }
+}

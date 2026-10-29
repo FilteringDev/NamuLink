@@ -1,6 +1,7 @@
 packages:
   - "builder"
   - "userscript"
+  - "testunit"
 
 allowBuilds:
   esbuild: true

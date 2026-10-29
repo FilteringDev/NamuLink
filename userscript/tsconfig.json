@@ -5,7 +5,7 @@
     "VM.d.ts"
   ],
   "compilerOptions": {
-    "rootDir": "./source",
+    "rootDir": "./",
     "outDir": "../dist/",
     "declaration": true,
     "skipLibCheck": true

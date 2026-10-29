@@ -8,8 +8,8 @@ on:
     branches: [ "**" ]
 
 jobs:
-  eslint:
-    name: Run ESLint
+  lint:
+    name: Run lint
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -27,8 +27,8 @@ jobs:
         run: mkdir -p ~/.pnpm-store && pnpm config set store-dir ~/.pnpm-store
       - name: Install dependencies
         run: pnpm install --no-lockfile
-      - name: Run ESLint
-        run: npm run lint
+      - name: Run lint
+        run: pnpm run lint
   build:
     name: Build the project
     runs-on: ubuntu-latest

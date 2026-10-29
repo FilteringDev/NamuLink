@@ -3,27 +3,25 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "lint": "tsc --noEmit && eslint **/*.ts",
+    "lint": "tsc --noEmit && oxlint --type-aware **/*.ts",
     "build": "tsx source/buildci.ts",
     "debug": "tsx source/debug.ts",
     "clean": "rm -rf dist && rm -rf .buildcache"
   },
   "devDependencies": {
     "@npmcli/package-json": "^8.0.0",
-    "@types/node": "^24.12.4",
+    "@types/node": "^26.6.5",
     "@types/npmcli__package-json": "^4.0.4",
-    "@typescript-eslint/eslint-plugin": "^8.59.4",
-    "@typescript-eslint/parser": "^8.59.4",
-    "@typescriptprime/parsing": "^2.0.1",
-    "chokidar": "^5.0.0",
-    "esbuild": "^0.28.0",
-    "eslint": "^10.4.0",
-    "memfs": "^4.57.2",
-    "tldts": "^7.1.2",
+    "@typescriptprime/parsing": "^2.0.2",
+    "chokidar": "^6.0.0",
+    "esbuild": "^0.28.2",
+    "memfs": "^4.80.0",
+    "oxlint": "^1.90.0",
+    "oxlint-tsgolint": "^7.0.2005",
+    "tldts": "^7.4.19",
     "ts-morph": "^28.0.0",
-    "tsx": "^4.22.3",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.4",
-    "zod": "^4.4.3"
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "zod": "^4.6.7"
   }
 }

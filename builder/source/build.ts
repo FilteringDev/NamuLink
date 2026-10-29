@@ -110,11 +110,13 @@ export async function Build(OptionsParam?: BuildOptions): Promise<void> {
     }
   })
 
-  const WorkerCode = await ESBuild.build({
-    entryPoints: [Path.resolve(ProjectRoot, 'userscript', 'source', 'ocr-worker.ts')],
+  // Bundled separately (not inlined via the virtual entry) so it can be embedded as a string and run inside a Worker/worker_threads.
+  const ColoringWorkerCode = await ESBuild.build({
+    entryPoints: [Path.resolve(ProjectRoot, 'userscript', 'source', 'coloring', 'coloring-worker.ts')],
     bundle: true,
     minify: Options.Minify,
     write: false,
+    external: ['node:worker_threads'],
     target: ['es2024', 'chrome119', 'firefox142', 'safari26']
   })
 
@@ -131,7 +133,7 @@ export async function Build(OptionsParam?: BuildOptions): Promise<void> {
     },
     target: ['es2024', 'chrome119', 'firefox142', 'safari26'],
     define: {
-      __OCR_WORKER_CODE__: JSON.stringify(WorkerCode.outputFiles[0].text)
+      __COLORING_WORKER_CODE__: JSON.stringify(ColoringWorkerCode.outputFiles[0].text)
     },
     plugins: [
       CreateVirtualIndexEntryPlugin(VirtualIndexEntry.EntryPath, VirtualIndexEntry.FileSystem)
