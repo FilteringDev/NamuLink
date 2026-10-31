@@ -56,7 +56,8 @@ export const PL2ContainerDarkBackgroundZone = [
   '#252627',
   '#262D33',
   '#23292B',
-  '#23262B'
+  '#23262B',
+  '#2E2A28'
 ]
 
 export const PL2ContainerDarkEdgeZone = [
