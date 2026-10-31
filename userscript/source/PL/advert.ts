@@ -126,9 +126,10 @@ function SnapshotContainerRect(Element: HTMLElement): ContainerRect {
 
 function CollectTileSnapshots(Container: HTMLElement, GlobalScope: typeof window): RowSnapshot[] {
   const RowElements = [...new Set(Container.querySelectorAll('tr, tbody, thead, tfoot'))].filter((Child) => Child instanceof HTMLElement).filter((RowElement) => RowElement.closest('table') === Container || (Container.tagName.toLowerCase() !== 'table' && RowElement.closest('table') === null))
-  const LeafRows = RowElements.filter((RowElement) => RowElements.every((Other) => Other === RowElement || !Other.contains(RowElement)))
-  const EffectiveLeafRows = LeafRows.length > 0 ? LeafRows : RowElements
-  if (EffectiveLeafRows.length > 0) return EffectiveLeafRows.map((RowElement) => SnapshotRow(RowElement, GlobalScope))
+  const InnermostRows = RowElements.filter((RowElement) => RowElements.every((Other) => Other === RowElement || !RowElement.contains(Other)))
+  const CandidateRows = InnermostRows.length > 0 ? InnermostRows : RowElements
+  const EffectiveRows = CandidateRows.map((RowElement) => SnapshotRow(RowElement, GlobalScope)).filter((Snapshot) => IsTransparentBackground(Snapshot.Background) === false && Snapshot.Width > 0 && Snapshot.Height > 0)
+  if (EffectiveRows.length > 0) return EffectiveRows
   if (Container.tagName.toLowerCase() === 'table') return []
   const Tiles: RowSnapshot[] = []
   const Queue: HTMLElement[] = [...Container.children].filter((Child): Child is HTMLElement => Child instanceof HTMLElement)
@@ -285,6 +286,8 @@ async function FindPL2Container(Ele: HTMLElement[], GlobalScope: typeof window =
   const MatchedAdverts = Candidates.filter((Candidate) => (MatchCountByElement.get(Candidate.Element) ?? 0) >= 2).map((Candidate) => Candidate.Element)
   return ExpandAdvertParents(MatchedAdverts, ParentPredicate)
 }
+
+export const FindPL2ContainerForTest = FindPL2Container
 
 export function PL2AdvertHook(Eve: CustomEvent<MethodCallDetailOf<typeof window, 'fetch'>>, GlobalScope: typeof window = window, ParentPredicate?: AdvertParentPredicate): void {
   const AllHTMLElement = [...new Set(GlobalScope.document.querySelectorAll('*'))].filter((Child) => Child instanceof HTMLElement)
