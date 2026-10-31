@@ -30,12 +30,12 @@ type RowSnapshot = {
   Bottom: number
 }
 
-export type AdvertParentPredicate = (Candidate: HTMLElement) => boolean
+export type AdvertParentPredicate = (Parent: HTMLElement, Advert: HTMLElement) => boolean
 
 function ExpandToMatchingParent(Advert: HTMLElement, Predicate: AdvertParentPredicate): HTMLElement {
   let Current: HTMLElement | null = Advert.parentElement
   while (Current !== null) {
-    if (Predicate(Current) === true) return Current
+    if (Predicate(Current, Advert) === true) return Current
     if (Current === Current.ownerDocument.body || Current === Current.ownerDocument.documentElement) break
     Current = Current.parentElement
   }
