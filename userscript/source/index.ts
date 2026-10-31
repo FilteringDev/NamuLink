@@ -27,5 +27,9 @@ function FindPlaceholderOfPL2AdvertContainer(CurrentParent: HTMLElement, Advert:
   return (MarginTopValue > 10 || MarginBottomValue > 10) && CurrentParent.innerText.trim() === Advert.innerText.trim()
 }
 
-AttachEventListenerToMethod(() => PL2AdvertHook(Win, FindPlaceholderOfPL2AdvertContainer), 'fetch', Win)
 AttachEventListenerToMethod(PL2PlaceholderHook, 'fetch', Win)
+
+document.addEventListener('DOMContentLoaded', () => {
+  const PL2Observer = new MutationObserver((Muation) => PL2AdvertHook(Win, FindPlaceholderOfPL2AdvertContainer))
+  PL2Observer.observe(document.querySelector('#app')!, { childList: true, subtree: true, attributes: true })
+})
