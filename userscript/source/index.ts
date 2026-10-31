@@ -20,5 +20,12 @@ const Win = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window
 
 // BUILD:START
 
-AttachEventListenerToMethod(PL2AdvertHook, 'fetch', Win)
+function FindPlaceholderOfPL2AdvertContainer(CurrentParent: HTMLElement, Advert: HTMLElement): boolean {
+  const CurrentComputedStyle = Win.getComputedStyle(CurrentParent)
+  const MarginTopValue = parseFloat(CurrentComputedStyle.getPropertyValue('margin-top'))
+  const MarginBottomValue = parseFloat(CurrentComputedStyle.getPropertyValue('margin-bottom'))
+  return MarginTopValue > 10 && MarginBottomValue > 10 && CurrentParent.innerText.trim() === Advert.innerText.trim()
+}
+
+AttachEventListenerToMethod((Eve) => PL2AdvertHook(Eve, Win, FindPlaceholderOfPL2AdvertContainer), 'fetch', Win)
 AttachEventListenerToMethod(PL2PlaceholderHook, 'fetch', Win)

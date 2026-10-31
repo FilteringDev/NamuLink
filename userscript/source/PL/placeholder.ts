@@ -28,7 +28,7 @@ async function FindPL2Placeholder(Ele: HTMLElement[], GlobalScope: typeof window
       Height: CurrentRect.height,
       MarginTop: parseFloat(CurrentStyle.getPropertyValue('margin-top')),
       MarginBottom: parseFloat(CurrentStyle.getPropertyValue('margin-bottom')),
-      TextLength: (VEle.textContent ?? '').trim().length
+      TextLength: (VEle.innerText ?? '').trim().length
     }
   })
 
