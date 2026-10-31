@@ -24,7 +24,7 @@ function FindPlaceholderOfPL2AdvertContainer(CurrentParent: HTMLElement, Advert:
   const CurrentComputedStyle = Win.getComputedStyle(CurrentParent)
   const MarginTopValue = parseFloat(CurrentComputedStyle.getPropertyValue('margin-top'))
   const MarginBottomValue = parseFloat(CurrentComputedStyle.getPropertyValue('margin-bottom'))
-  return MarginTopValue > 10 && MarginBottomValue > 10 && CurrentParent.innerText.trim() === Advert.innerText.trim()
+  return (MarginTopValue > 10 || MarginBottomValue > 10) && CurrentParent.innerText.trim() === Advert.innerText.trim()
 }
 
 AttachEventListenerToMethod((Eve) => PL2AdvertHook(Eve, Win, FindPlaceholderOfPL2AdvertContainer), 'fetch', Win)
