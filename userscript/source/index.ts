@@ -27,5 +27,5 @@ function FindPlaceholderOfPL2AdvertContainer(CurrentParent: HTMLElement, Advert:
   return (MarginTopValue > 10 || MarginBottomValue > 10) && CurrentParent.innerText.trim() === Advert.innerText.trim()
 }
 
-AttachEventListenerToMethod((Eve) => PL2AdvertHook(Eve, Win, FindPlaceholderOfPL2AdvertContainer), 'fetch', Win)
+AttachEventListenerToMethod(() => PL2AdvertHook(Win, FindPlaceholderOfPL2AdvertContainer), 'fetch', Win)
 AttachEventListenerToMethod(PL2PlaceholderHook, 'fetch', Win)

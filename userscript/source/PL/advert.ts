@@ -1,4 +1,3 @@
-import { type MethodCallDetailOf } from '@userscript/event-attacher.js'
 import {
   PL2ContainerLightEdgeZone,
   PL2ContainerDarkEdgeZone,
@@ -289,7 +288,7 @@ async function FindPL2Container(Ele: HTMLElement[], GlobalScope: typeof window =
 
 export const FindPL2ContainerForTest = FindPL2Container
 
-export function PL2AdvertHook(Eve: CustomEvent<MethodCallDetailOf<typeof window, 'fetch'>>, GlobalScope: typeof window = window, ParentPredicate?: AdvertParentPredicate): void {
+export function PL2AdvertHook(GlobalScope: typeof window = window, ParentPredicate?: AdvertParentPredicate): void {
   const AllHTMLElement = [...new Set(GlobalScope.document.querySelectorAll('*'))].filter((Child) => Child instanceof HTMLElement)
   void FindPL2Container(AllHTMLElement, GlobalScope, ParentPredicate).then((TargetedHTMLElement) => {
     GlobalScope.setInterval(() => {
