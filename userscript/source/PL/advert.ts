@@ -30,6 +30,23 @@ type RowSnapshot = {
   Bottom: number
 }
 
+export type AdvertParentPredicate = (Candidate: HTMLElement) => boolean
+
+function ExpandToMatchingParent(Advert: HTMLElement, Predicate: AdvertParentPredicate): HTMLElement {
+  let Current: HTMLElement | null = Advert.parentElement
+  while (Current !== null) {
+    if (Predicate(Current) === true) return Current
+    if (Current === Current.ownerDocument.body || Current === Current.ownerDocument.documentElement) break
+    Current = Current.parentElement
+  }
+  return Advert
+}
+
+function ExpandAdvertParents(Adverts: readonly HTMLElement[], Predicate?: AdvertParentPredicate): HTMLElement[] {
+  if (Predicate === undefined) return [...Adverts]
+  return [...new Set(Adverts.map((Advert) => ExpandToMatchingParent(Advert, Predicate)))]
+}
+
 const TransparentBackgroundPattern = /rgba?\([0-9]+, *[0-9]+, *[0-9]+, *0(\.0+)?\)/
 
 function IsTransparentBackground(Background: string): boolean {
@@ -183,7 +200,7 @@ async function FindPromotedTables(EdgeOnlyContainers: StyleSnapshot[], RatioByKe
   })
 }
 
-async function FindPL2Container(Ele: HTMLElement[], GlobalScope: typeof window = window): Promise<HTMLElement[]> {
+async function FindPL2Container(Ele: HTMLElement[], GlobalScope: typeof window = window, ParentPredicate?: AdvertParentPredicate): Promise<HTMLElement[]> {
   const BackgroundZones = [PL2ContainerDarkBackgroundZone, PL2ContainerLightBackgroundZone]
   const EdgeZones = [PL2ContainerDarkEdgeZone, PL2ContainerLightEdgeZone]
 
@@ -265,12 +282,13 @@ async function FindPL2Container(Ele: HTMLElement[], GlobalScope: typeof window =
     if (Ratio !== -1) MatchCountByElement.set(Entry.Owner.Element, (MatchCountByElement.get(Entry.Owner.Element) ?? 0) + 1)
   }
 
-  return Candidates.filter((Candidate) => (MatchCountByElement.get(Candidate.Element) ?? 0) >= 2).map((Candidate) => Candidate.Element)
+  const MatchedAdverts = Candidates.filter((Candidate) => (MatchCountByElement.get(Candidate.Element) ?? 0) >= 2).map((Candidate) => Candidate.Element)
+  return ExpandAdvertParents(MatchedAdverts, ParentPredicate)
 }
 
-export function PL2AdvertHook(Eve: CustomEvent<MethodCallDetailOf<typeof window, 'fetch'>>, GlobalScope: typeof window = window): void {
+export function PL2AdvertHook(Eve: CustomEvent<MethodCallDetailOf<typeof window, 'fetch'>>, GlobalScope: typeof window = window, ParentPredicate?: AdvertParentPredicate): void {
   const AllHTMLElement = [...new Set(GlobalScope.document.querySelectorAll('*'))].filter((Child) => Child instanceof HTMLElement)
-  void FindPL2Container(AllHTMLElement, GlobalScope).then((TargetedHTMLElement) => {
+  void FindPL2Container(AllHTMLElement, GlobalScope, ParentPredicate).then((TargetedHTMLElement) => {
     GlobalScope.setInterval(() => {
       TargetedHTMLElement.forEach(VHTMLElement => VHTMLElement.style.setProperty('display', 'none'))
     }, 1000)
