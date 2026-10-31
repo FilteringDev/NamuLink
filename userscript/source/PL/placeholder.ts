@@ -3,12 +3,18 @@ import { DistancePairKey, QueryHexDistances, type DistancePair } from '@userscri
 
 type StyleSnapshot = {
   Element: HTMLElement
+  Tag: string
   Background: string
   Width: number
   Height: number
   MarginTop: number
   MarginBottom: number
+  TextLength: number
 }
+
+const ExcludedPlaceholderTags: ReadonlySet<string> = new Set(['blockquote', 'q', 'cite'])
+const PlaceholderMaxTextLength = 30
+const PlaceholderBackgroundMaxDistance = 10
 
 async function FindPL2Placeholder(Ele: HTMLElement[], GlobalScope: typeof window = window): Promise<HTMLElement[]> {
   const Snapshots: StyleSnapshot[] = Ele.map((VEle) => {
@@ -16,15 +22,19 @@ async function FindPL2Placeholder(Ele: HTMLElement[], GlobalScope: typeof window
     const CurrentRect = VEle.getBoundingClientRect()
     return {
       Element: VEle,
+      Tag: VEle.tagName.toLowerCase(),
       Background: CurrentStyle.getPropertyValue('background-color'),
       Width: CurrentRect.width,
       Height: CurrentRect.height,
       MarginTop: parseFloat(CurrentStyle.getPropertyValue('margin-top')),
-      MarginBottom: parseFloat(CurrentStyle.getPropertyValue('margin-bottom'))
+      MarginBottom: parseFloat(CurrentStyle.getPropertyValue('margin-bottom')),
+      TextLength: (VEle.textContent ?? '').trim().length
     }
   })
 
   const Candidates = Snapshots.filter((Snapshot) => {
+    if (ExcludedPlaceholderTags.has(Snapshot.Tag) === true) return false
+    if (Snapshot.TextLength > PlaceholderMaxTextLength) return false
     if (Snapshot.Height === 0 || Snapshot.Width === 0) return false
     if (Snapshot.Width / Snapshot.Height < 1) return false
     if (Snapshot.Width / Snapshot.Height > 2) return false
