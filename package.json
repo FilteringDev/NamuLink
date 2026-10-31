@@ -8,7 +8,9 @@
     "build:dev": "npm run build -w builder -- --minify false --use-cache false --build-type production --SubscriptionUrl https://cdn.jsdelivr.net/npm/@filteringdev/namulink@latest/dist/NamuLink.user.js",
     "debug": "npm run debug -w builder",
     "lint": "pnpm --filter @filteringdev/namulink-builder run lint && pnpm --filter @filteringdev/namulink-userscript run lint",
-    "test": "npm run test -w testunit"
+    "test": "npm run test -w testunit",
+    "playwright": "npm run playwright -w testunit",
+    "playwright:install": "npm run playwright:install -w testunit"
   },
   "keywords": [
     "namu.wiki",
