@@ -1,6 +1,13 @@
 import { test, expect } from 'vitest'
 import fc from 'fast-check'
 import { ParseHexColor, HexDistance, HexRelativeLuminance, HexContrastRatio, IsReadableTextColor, TextReadabilityScore, IsInsideRegion, RegionCentroidRatio } from '@userscript/coloring/coloring.js'
+import { PL2ContainerDarkBackgroundZone, PL2ContainerDarkEdgeZone, PL2GreenLinkColorZone } from '../../userscript/source/PL/color-pattern.js'
+
+test('PL2 color zones include the specified RGB colors', () => {
+  expect(PL2ContainerDarkBackgroundZone).toContain('#2A282D')
+  expect(PL2ContainerDarkEdgeZone).toContain('#444444')
+  expect(PL2GreenLinkColorZone).toContain('#377E21')
+})
 
 test('ParseHexColor accepts #RGB, #RRGGBB, and no-# forms', () => {
   expect(ParseHexColor('#fff')).toEqual([255, 255, 255])

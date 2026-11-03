@@ -11,6 +11,7 @@ export const PL2GreenLinkColorZone = [
   '#597819',
   '#3D6C2A',
   '#376400',
+  '#377E21',
 ]
 
 export const PL2FontColorDarkTheme = '#FFFFFF'
@@ -57,7 +58,9 @@ export const PL2ContainerDarkBackgroundZone = [
   '#262D33',
   '#23292B',
   '#23262B',
-  '#2E2A28'
+  '#2E2A28',
+  '#2A282D',
+  '#2D2729'
 ]
 
 export const PL2ContainerDarkEdgeZone = [
@@ -72,7 +75,8 @@ export const PL2ContainerDarkEdgeZone = [
   '#3E3D3A',
   '#404548',
   '#3C4140',
-  '#3C3D3F'
+  '#3C3D3F',
+  '#444444'
 ]
 
 export const NamuWikiArticleViewerDarkThemeZone = [
