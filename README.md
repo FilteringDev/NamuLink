@@ -2,9 +2,9 @@
 
 [![jsDelivr Stats](https://data.jsdelivr.com/v1/package/npm/@filteringdev/namulink/badge)](https://www.jsdelivr.com/package/npm/@filteringdev/namulink)
 
-NamuLink 유저스크립트는 나무위키의 고급 난독화 시스템 (커스텀 Base64 인코더/디코더 및 [RC4 스트림 암호화](https://en.wikipedia.org/wiki/RC4))를 역이용하거나 프론트엔드 구성 도중에 구성 함수를 무효화하여 나무위키에 있는 처리하기 복잡하고 직접 로드되는 파워링크를 차단합니다.
+NamuLink 유저스크립트는 나무위키 프론트엔드에 있는 파워링크 광고를 2차원 기하학 & 3차원 기하학 기반의 검사 로직을 도입해 시작적인 판단 방법으로 차단합니다.
 
-NamuLink 유저스크립트는 AdGuard와 애드블록 커뮤니티에 의해 관리되고 있습니다.
+NamuLink 유저스크립트는 애드블록 커뮤니티에 의해 관리되고 있습니다.
 
 설치/이용 과정에서 도움이 필요하시거나 궁금증이 있으시다면 GitHub Discussions를 이용해 주세요.
 사용 도중에 해당 유저스크립트가 문제를 발생시킨다고 생각되시면 GitHub Issues를 이용해 주세요.
