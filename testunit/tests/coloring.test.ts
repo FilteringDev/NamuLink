@@ -7,6 +7,7 @@ test('PL2 color zones include the specified RGB colors', () => {
   expect(PL2ContainerDarkBackgroundZone).toContain('#2A282D')
   expect(PL2ContainerDarkEdgeZone).toContain('#444444')
   expect(PL2GreenLinkColorZone).toContain('#377E21')
+  expect(PL2ContainerDarkBackgroundZone).toContain('#2B2E2B')
 })
 
 test('ParseHexColor accepts #RGB, #RRGGBB, and no-# forms', () => {
