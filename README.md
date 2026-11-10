@@ -28,7 +28,9 @@ NamuLink 유저스크립트는 애드블록 커뮤니티에 의해 관리되고 
 https://cdn.jsdelivr.net/npm/@filteringdev/namulink@latest/dist/NamuLink.user.js
 
 ### 설치하는 법
-- [Violentmonkey](https://addons.mozilla.org/ko/firefox/addon/violentmonkey/) (AdGuard 프리미엄이 없다면 권장됨) - 브라우저 확장
+Firefox 및 Chromium 기반 브라우저에서는 **Violentmonkey**를, macOS·iOS·iPadOS의 Safari에서는 **wBlock**을 권장합니다. **Tampermonkey는 권장하지 않습니다.**
+
+- [Violentmonkey](https://violentmonkey.github.io/get-it/) (권장) - Firefox 및 Chromium 기반 브라우저 확장
   1. `Dashboard`를 엽니다.
   2. `New` 버튼을 누르십시오.
   3. `Install from URL` 버튼을 누르십시오.
@@ -46,28 +48,19 @@ https://cdn.jsdelivr.net/npm/@filteringdev/namulink@latest/dist/NamuLink.user.js
 - AdGuard for Android
   1. 빠른 시작 세션에 있는 URL를 클릭하여 설치하십시오.
 
-- AdGuard for iOS
-  AdGuard for iOS는 현재 유저스크립트를 지원하지 않습니다
-  그러나, 미래에 지원될 것입니다.[^1]
-
-  몰론, 지금은 대안을 사용하실 수 있습니다.[^2][^3]
+- [wBlock](https://apps.apple.com/app/wblock/id6746388723) (권장) - macOS·iOS·iPadOS Safari
 
   <details>
-  <summary>iOS 유저들을 위한 자세한 설명</summary>
+  <summary>Safari에서 wBlock으로 설치하기</summary>
 
-  1. [**Userscripts** 앱](https://apps.apple.com/kr/app/userscripts/id1463298887)을 설치하십시오.
-  2. Userscripts 확장을 Safari 설정에서 활성화하십시오:
-    * iOS 18 이상: `시스템 설정` => `앱` => `Safari` => `확장 프로그램`
-    * iOS 17 이하: `시스템 설정` => `Safari` => `확장 프로그램`
-    **Userscripts**을 찾으시고 활성화하신 후 `기타 웹 사이트` 권한을 허용하십시오.
-  3. Safari에서 [빠른 시작 세션에 있는 URL](https://cdn.jsdelivr.net/npm/@filteringdev/namulink@latest/dist/NamuLink.user.js)을 클릭하십시오.
-  4. Safari의 주소바에 있는 확장 아이콘을 클릭하시고 **Userscripts**을 선택하십시오.
-  5. 설치하는 버튼을 누르십시오.
-  6. 열린 팝업을 스크롤하신 후에 설치하는 버튼을 누르십시오.
-  7. 완료되었습니다.
+  1. wBlock 앱을 설치하고 실행한 뒤 초기 설정 안내를 따르십시오.
+  2. Safari 확장 프로그램 설정에서 **wBlock Scripts**를 활성화하고 모든 웹 사이트에서 실행할 권한을 허용하십시오.
+     - macOS: `Safari` > `설정` > `확장 프로그램`
+     - iOS·iPadOS 18 이상: `설정` > `앱` > `Safari` > `확장 프로그램`
+     - iOS·iPadOS 17 이하: `설정` > `Safari` > `확장 프로그램`
+  3. wBlock 앱의 `Userscripts` 화면에서 추가 메뉴(`+`) > `Userscript` > `URL` > `Single URL`을 선택하십시오.
+  4. [빠른 시작 URL](https://cdn.jsdelivr.net/npm/@filteringdev/namulink@latest/dist/NamuLink.user.js)을 입력하고 `Next`를 누르십시오.
+  5. 메타데이터를 확인한 뒤 `Add`를 눌러 스크립트를 추가하고 활성화하십시오.
+  6. Safari에서 나무위키를 열고 있는 탭으로 돌아가 새로고침하십시오.
 
   </details>
-
-[^1]: https://github.com/AdguardTeam/AdguardForiOS/issues/1542
-[^2]: https://github.com/quoid/userscripts
-[^3]: https://apps.apple.com/us/app/userscripts/id1463298887
