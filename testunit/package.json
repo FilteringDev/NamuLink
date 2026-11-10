@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
-    "@types/web": "^0.0.359",
+    "@types/web": "^0.0.361",
     "@violentmonkey/types": "^0.3.4",
     "esbuild": "^0.28.2",
     "fast-check": "^4.10.2",
